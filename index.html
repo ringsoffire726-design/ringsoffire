@@ -62,7 +62,7 @@
             Timer, AlertOctagon, Menu, Info, Pause, PlayCircle, Wallet, 
             CreditCard, Smartphone, ShieldCheck, Loader2, ChevronRight,
             Megaphone, ScrollText, List, Coins, Save, MinusCircle, Pencil,
-            Instagram, Mail, LogIn, UserPlus, Bell, Send
+            Instagram, Mail, LogIn, UserPlus, Bell, Send, Filter
         } from 'https://esm.sh/lucide-react@0.292.0';
 
         // --- GLOBAL VARIABLES ---
@@ -912,7 +912,7 @@
                         )}
 
                         <div className="mt-auto pt-3 md:pt-4 border-t border-slate-800/50 flex justify-between items-center">
-                            <div className="text-white font-bold text-base md:text-lg">₹{t.entryFee}</div>
+                            <div className="text-white font-bold text-base md:text-lg">{Number(t.entryFee) === 0 ? <span className="text-emerald-400">FREE</span> : `₹${t.entryFee}`}</div>
                             {joined ? (
                                 verified ? (
                                     <button disabled className="bg-emerald-600/20 text-emerald-400 px-3 py-2 md:px-4 md:py-2 rounded font-bold flex gap-2 text-xs md:text-sm"><CheckCircle size={16}/> JOINED</button>
@@ -937,7 +937,16 @@
         function PlayerPanel({ tournaments, showNotification, userId }) {
           const [view, setView] = useState('home');
           const [selected, setSelected] = useState(null);
+          const [gameFilter, setGameFilter] = useState('All'); // New State
+
           const champion = useMemo(() => { const comp = tournaments.filter(t => t.status === 'completed' && t.winner); return comp.length ? comp.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))[0] : null; }, [tournaments]);
+
+          // Filter Logic
+          const filteredTournaments = tournaments.filter(t => {
+              if (gameFilter === 'All') return true;
+              return t.game === gameFilter;
+          });
+
           return (
             <div>
               {view === 'home' && champion && (
@@ -967,14 +976,39 @@
                 </div>
               </div>
               {view === 'profile' ? <PlayerProfile userId={userId} tournaments={tournaments} /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up">
-                  {tournaments.map(t => {
-                      const joined = t.participants?.find(p => p.userId === userId);
-                      const verified = joined?.paymentVerified;
-                      const filled = t.filledSlots || 0; const total = t.totalSlots || 1; const slotsLeft = Math.max(0, total - filled); const percentFilled = Math.min(100, (filled / total) * 100); const isFull = slotsLeft === 0;
-                      return <PlayerTournamentCard key={t.id} t={t} joined={joined} verified={verified} slotsLeft={slotsLeft} percentFilled={percentFilled} isFull={isFull} setSelected={setSelected} />;
-                  })}
-                </div>
+                <>
+                    {/* Game Filter UI - Only show in Events view */}
+                    <div className="flex gap-2 mb-6 overflow-x-auto custom-scrollbar pb-2">
+                        {['All', 'Free Fire', 'BGMI', 'PUBG Mobile', 'COD Mobile'].map(game => (
+                            <button
+                                key={game}
+                                onClick={() => setGameFilter(game)}
+                                className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap border transition-all ${
+                                    gameFilter === game 
+                                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
+                                    : 'bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                                }`}
+                            >
+                                {game}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up">
+                      {filteredTournaments.length === 0 ? (
+                          <div className="col-span-full text-center py-12 border border-dashed border-slate-800 rounded-2xl bg-slate-900/50">
+                              <p className="text-slate-500">No tournaments found for {gameFilter}.</p>
+                          </div>
+                      ) : (
+                          filteredTournaments.map(t => {
+                              const joined = t.participants?.find(p => p.userId === userId);
+                              const verified = joined?.paymentVerified;
+                              const filled = t.filledSlots || 0; const total = t.totalSlots || 1; const slotsLeft = Math.max(0, total - filled); const percentFilled = Math.min(100, (filled / total) * 100); const isFull = slotsLeft === 0;
+                              return <PlayerTournamentCard key={t.id} t={t} joined={joined} verified={verified} slotsLeft={slotsLeft} percentFilled={percentFilled} isFull={isFull} setSelected={setSelected} />;
+                          })
+                      )}
+                    </div>
+                </>
               )}
               {selected && <PaymentModal tournament={selected} onClose={()=>setSelected(null)} userId={userId} showNotification={showNotification} />}
             </div>
@@ -1033,7 +1067,8 @@
             return () => clearInterval(interval);
           }, [step, onClose]);
 
-          const handleFakeProcess = async (e) => {
+          // Unified processing for both Free and Paid joining
+          const handleJoinSubmit = async (e, isFree = false) => {
               e.preventDefault(); 
               setLoading(true); 
               
@@ -1047,16 +1082,23 @@
                             name: form.name, 
                             inGameName: form.ign, 
                             teammates: form.team, 
-                            paymentId: form.txn, 
-                            paymentVerified: false, 
+                            // If free, mark verified immediately and set ID to FREE-ENTRY
+                            paymentId: isFree ? 'FREE-ENTRY' : form.txn, 
+                            paymentVerified: isFree ? true : false, 
                             joinedAt: new Date().toISOString(), 
                             upiId: form.upiId, 
                             upiName: form.upiName 
                         }) 
                     }); 
                 }
-                setStep(3); 
-                showNotification("Request Submitted");
+                
+                if (isFree) {
+                    showNotification("Successfully Joined Tournament!");
+                    onClose(); // Close immediately for free joins
+                } else {
+                    setStep(3); 
+                    showNotification("Request Submitted");
+                }
               } catch(e) { 
                   console.error(e); 
                   alert("Error submitting. Please try again.");
@@ -1076,12 +1118,24 @@
                 {step === 1 ? (
                   <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1">
                       <h3 className="text-xl md:text-2xl font-black text-white mb-6">Registration</h3>
-                      <form onSubmit={e => {e.preventDefault(); setStep(2)}} className="space-y-4">
+                      <form onSubmit={e => {
+                          e.preventDefault();
+                          // Check if Free Entry
+                          if (Number(tournament.entryFee) === 0) {
+                              handleJoinSubmit(e, true); // True flag for isFree
+                          } else {
+                              setStep(2);
+                          }
+                      }} className="space-y-4">
                         <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="Your Name" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} />
                         <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="In-Game Name" value={form.ign} onChange={e=>setForm({...form, ign:e.target.value})} />
                         {req > 1 && <div className="space-y-2"><label className="text-xs font-bold text-slate-500">Teammates</label>{form.team.map((t,i)=><input key={i} required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder={`Teammate ${i+1}`} value={t} onChange={ev=>{const n=[...form.team]; n[i]=ev.target.value; setForm({...form, team:n})}} />)}</div>}
                         <div className="pt-4 border-t border-slate-800"><h4 className="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2"><Wallet size={16}/> For Winning Payouts</h4><div className="space-y-3"><div><label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">UPI ID</label><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="e.g. user@upi" value={form.upiId} onChange={e=>setForm({...form, upiId:e.target.value})} /></div><div><label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Registered Name</label><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="e.g. John Doe" value={form.upiName} onChange={e=>setForm({...form, upiName:e.target.value})} /></div></div></div>
-                        <button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 md:py-4 rounded-xl mt-2 text-sm md:text-base flex justify-center items-center gap-2">Next Step <ChevronRight size={18}/></button>
+                        
+                        <button disabled={loading} className={`w-full text-white font-bold py-3 md:py-4 rounded-xl mt-2 text-sm md:text-base flex justify-center items-center gap-2 ${Number(tournament.entryFee) === 0 ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-cyan-600 hover:bg-cyan-500'}`}>
+                             {loading ? <Loader2 size={18} className="animate-spin"/> : (Number(tournament.entryFee) === 0 ? <CheckCircle size={18}/> : <ChevronRight size={18}/>)}
+                             {Number(tournament.entryFee) === 0 ? 'Join Now (Free)' : 'Next Step'}
+                        </button>
                       </form>
                   </div>
                 ) : step === 2 ? (
@@ -1109,13 +1163,13 @@
                               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex gap-2 items-start">
                                   <Info size={16} className="text-blue-600 mt-0.5 shrink-0"/>
                                   <span className="text-xs text-blue-800 font-medium">
-                                      After paying via UPI, enter the 12-digit UTR/Transaction ID below.
-                                      <br/>
-                                      <span className="font-bold">Admin approval takes ~5 minutes.</span>
+                                    After paying via UPI, enter the 12-digit UTR/Transaction ID below.
+                                    <br/>
+                                    <span className="font-bold">Admin approval takes ~5 minutes.</span>
                                   </span>
                               </div>
 
-                              <form onSubmit={handleFakeProcess} className="space-y-4">
+                              <form onSubmit={(e) => handleJoinSubmit(e, false)} className="space-y-4">
                                   <div>
                                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">UTR / Reference No.</label>
                                       <input 
