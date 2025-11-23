@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ring's of Fire - Esports League</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <div id="root"></div>
+
+    <!-- Application Logic -->
+    <script type="text/babel" data-type="module">
+        // --- Imports via CDN for Browser Environment ---
+        import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        
+        // Firebase Modular SDKs
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js';
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut
+        } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            updateDoc, 
+            doc, 
+            setDoc,
+            onSnapshot, 
+            serverTimestamp, 
+            arrayUnion, 
+            deleteDoc, 
+            increment 
+        } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+        // Lucide React Icons
+        import { 
+            Trophy, Gamepad2, Users, Calendar, CheckCircle, Plus, Trash2, 
+            LogOut, Shield, User, X, Lock, Key, Edit3, Crosshair, Award, 
+            History, Zap, QrCode, AlertTriangle, Check, RefreshCcw, Flame, 
+            Timer, AlertOctagon, Menu, Info, Pause, PlayCircle, Wallet, 
+            CreditCard, Smartphone, ShieldCheck, Loader2, ChevronRight,
+            Megaphone, ScrollText, List, Coins, Save, MinusCircle, Pencil,
+            Instagram, Mail, LogIn, UserPlus, Bell, Send
+        } from 'https://esm.sh/lucide-react@0.292.0';
+
+        // --- GLOBAL VARIABLES ---
+        let app, analytics, auth, db;
+        let initError = null; 
+
+        // --- FIREBASE INITIALIZATION (Production Config) ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyA6h78d692c8B86bY9VdStoHxw-RXgKfBE",
+          authDomain: "rings-of-fire-2.firebaseapp.com",
+          projectId: "rings-of-fire-2",
+          storageBucket: "rings-of-fire-2.firebasestorage.app",
+          messagingSenderId: "53125558154",
+          appId: "1:53125558154:web:4fa473df9d422ad48de273",
+          measurementId: "G-JVJJB1SWHF"
+        };
+
+        try {
+            app = initializeApp(firebaseConfig);
+            analytics = getAnalytics(app);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            console.log("Firebase connected to project: rings-of-fire-2");
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+            initError = e;
+        }
+
+        // --- Helper for Firestore Paths ---
+        const getTournamentCollection = () => {
+          if (!db) return null;
+          return collection(db, 'tournaments');
+        };
+
+        const getTournamentDoc = (id) => {
+          if (!db) return null;
+          return doc(db, 'tournaments', id);
+        };
+        
+        const getSettingsDoc = (docName) => {
+            if (!db) return null;
+            return doc(db, 'appSettings', docName);
+        };
+
+        // --- Helper Functions ---
+        const formatDate = (isoString) => {
+            return new Date(isoString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        };
+
+        const formatTime = (isoString) => {
+            return new Date(isoString).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+        };
+
+        // --- Custom CSS ---
+        const CustomStyles = () => (
+          <style>{`
+            @keyframes gradient-xy { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+            @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            @keyframes burn { 0% { text-shadow: 0 0 4px #22d3ee, 0 0 10px #3b82f6, 0 0 20px #8b5cf6; } 50% { text-shadow: 0 0 8px #22d3ee, 0 0 20px #3b82f6, 0 0 30px #8b5cf6; } 100% { text-shadow: 0 0 4px #22d3ee, 0 0 10px #3b82f6, 0 0 20px #8b5cf6; } }
+            @keyframes rise { 0% { transform: translateY(110vh) scale(1); opacity: 0; } 20% { opacity: 0.8; } 100% { transform: translateY(-10vh) scale(0.5); opacity: 0; } }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes scroll-left { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+            
+            .animate-gradient-xy { background-size: 200% 200%; animation: gradient-xy 15s ease infinite; }
+            .animate-float { animation: float 6s ease-in-out infinite; }
+            .animate-burn { animation: burn 2s infinite; }
+            .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+            .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+            .animate-fade-in-down { animation: fadeInDown 0.5s ease-out forwards; }
+            .animate-scroll-left { animation: scroll-left 30s linear infinite; }
+
+            .particle { position: absolute; bottom: -20px; background: linear-gradient(to top, #06b6d4, #3b82f6); border-radius: 50%; opacity: 0; animation: rise linear infinite; }
+            .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
+            .glass-card { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .glass-card:hover { background: rgba(30, 41, 59, 0.8); border-color: rgba(6, 182, 212, 0.4); transform: translateY(-4px); box-shadow: 0 10px 40px -10px rgba(6, 182, 212, 0.3); }
+            .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7); }
+            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.5); border-radius: 10px; }
+            input, select, button { font-size: 16px !important; }
+          `}</style>
+        );
+
+        // --- Components ---
+        const CountdownTimer = ({ targetDate }) => {
+          const calculateTimeLeft = () => {
+            const target = new Date(targetDate);
+            if (isNaN(target.getTime())) return {};
+            const difference = +target - +new Date();
+            let timeLeft = {};
+            if (difference > 0) {
+              timeLeft = { d: Math.floor(difference / (1000 * 60 * 60 * 24)), h: Math.floor((difference / (1000 * 60 * 60)) % 24), m: Math.floor((difference / 1000 / 60) % 60), s: Math.floor((difference / 1000) % 60) };
+            }
+            return timeLeft;
+          };
+          const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+          useEffect(() => { const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000); return () => clearInterval(timer); }, [targetDate]);
+          const format = (num) => String(num).padStart(2, '0');
+          if (Object.keys(timeLeft).length === 0) return <span className="text-emerald-400 font-bold animate-pulse">LIVE</span>;
+          return <div className={`flex items-center gap-1 font-mono text-xs md:text-sm font-bold ${!timeLeft.d ? 'text-yellow-400' : 'text-cyan-400'}`}>{timeLeft.d > 0 && <span>{timeLeft.d}d</span>}<span>{format(timeLeft.h)}h</span><span>{format(timeLeft.m)}m</span></div>;
+        };
+
+        const PaymentTimer = ({ initialSeconds, onExpire }) => {
+            const [seconds, setSeconds] = useState(initialSeconds);
+            useEffect(() => { if (seconds > 0) { const timer = setTimeout(() => setSeconds(seconds - 1), 1000); return () => clearTimeout(timer); } else { onExpire(); } }, [seconds]);
+            const mins = Math.floor(seconds / 60); const secs = seconds % 60;
+            return <span className="font-mono text-yellow-400">{mins}:{secs.toString().padStart(2, '0')}</span>;
+        };
+
+        // --- Dynamic News Ticker ---
+        const NewsTicker = ({ newsItems }) => {
+            const items = newsItems && newsItems.length > 0 
+                ? newsItems 
+                : ["Welcome to Ring's of Fire! 🏆", "Register for upcoming tournaments now! 🚀"];
+
+            return (
+                <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-white/5 h-8 flex items-center overflow-hidden relative z-50">
+                    <div className="absolute left-0 z-10 bg-slate-950 px-2 h-full flex items-center text-yellow-500 font-bold text-xs"><Megaphone size={14} className="mr-1"/> NEWS</div>
+                    <div className="whitespace-nowrap animate-scroll-left flex gap-12 items-center text-xs text-slate-400 font-medium w-full">
+                        {items.map((item, i) => (
+                            <span key={i} className="flex items-center gap-2">{item}</span>
+                        ))}
+                        {items.map((item, i) => (
+                            <span key={`dup-${i}`} className="flex items-center gap-2">{item}</span>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const ParticleBackground = () => {
+          const particles = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({ id: i, left: Math.random() * 100 + '%', size: Math.random() * 4 + 2 + 'px', duration: Math.random() * 5 + 5 + 's', delay: -(Math.random() * 10) + 's' })), []);
+          return (
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+              <div className="absolute top-0 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-cyan-600/10 rounded-full blur-[80px] md:blur-[120px] animate-float" style={{animationDelay: '0s'}}/>
+              <div className="absolute bottom-0 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-violet-600/10 rounded-full blur-[80px] md:blur-[120px] animate-float" style={{animationDelay: '2s'}}/>
+              {particles.map(p => (<div key={p.id} className="particle" style={{ left: p.left, width: p.size, height: p.size, animationDuration: p.duration, animationDelay: p.delay }} />))}
+            </div>
+          );
+        };
+
+        // --- Main Component ---
+        function App({ initialError }) {
+          const [user, setUser] = useState(null);
+          const [role, setRole] = useState(null);
+          const [tournaments, setTournaments] = useState([]);
+          const [news, setNews] = useState([]);
+          const [loading, setLoading] = useState(true);
+          const [notification, setNotification] = useState(null);
+          const [authError, setAuthError] = useState(initialError?.message || null);
+
+          useEffect(() => {
+            if (!app) {
+                setLoading(false);
+                if (!authError) setAuthError("Critical: Firebase Init Failed");
+                return;
+            }
+
+            // We only init auth listener, no auto-login for players anymore to support Login Screen
+            const unsubscribe = onAuthStateChanged(auth, (u) => { 
+                setUser(u); 
+                if (u) {
+                   setAuthError(null); 
+                }
+                setLoading(false); 
+            });
+            return () => unsubscribe();
+          }, []);
+
+          // Data Fetching
+          useEffect(() => {
+            if (!user || !db) return;
+            try {
+              const tournamentsRef = getTournamentCollection();
+              if (tournamentsRef) {
+                  onSnapshot(tournamentsRef, (snapshot) => {
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    data.sort((a, b) => {
+                      if (a.status === 'completed' && b.status !== 'completed') return 1;
+                      if (a.status !== 'completed' && b.status === 'completed') return -1;
+                      return new Date(a.dateTime || Date.now()) - new Date(b.dateTime || Date.now());
+                    });
+                    setTournaments(data);
+                  }, (error) => { 
+                      console.error("Sync Error", error);
+                      if (error.code !== 'permission-denied') showNotification('Sync Error', 'error'); 
+                      setTournaments([]); 
+                  });
+              }
+
+              const newsDoc = getSettingsDoc('news');
+              if (newsDoc) {
+                  onSnapshot(newsDoc, (doc) => {
+                      if (doc.exists()) {
+                          setNews(doc.data().items || []);
+                      }
+                  });
+              }
+
+            } catch (e) { console.error("Firestore Error", e); }
+          }, [user]);
+
+          const showNotification = (message, type = 'success') => { setNotification({ message, type }); setTimeout(() => setNotification(null), 3000); };
+
+          // Simple Log Out function
+          const handleLogout = () => {
+              signOut(auth).then(() => {
+                  setRole(null);
+                  showNotification("Logged Out Successfully");
+              });
+          };
+
+          if (authError) {
+              return (
+                  <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400 p-6 text-center">
+                      <AlertTriangle size={64} className="text-red-500 mb-4"/>
+                      <h1 className="text-2xl font-bold text-white mb-2">Initialization Error</h1>
+                      <p className="max-w-md text-sm text-red-400">{authError}</p>
+                  </div>
+              );
+          }
+
+          if (loading) return <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-cyan-500 gap-4"><div className="animate-spin"><Loader2 size={48} /></div><div className="text-xs font-mono animate-pulse">CONNECTING TO SERVER...</div></div>;
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 animate-gradient-xy text-slate-200 font-sans selection:bg-cyan-500 selection:text-slate-950 relative overflow-x-hidden pb-20 md:pb-0">
+              <CustomStyles />
+              <NewsTicker newsItems={news} />
+              <ParticleBackground />
+              {notification && (
+                <div className={`fixed top-14 left-4 right-4 md:left-auto md:right-6 md:w-auto z-[100] px-4 py-3 rounded-xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 animate-fade-in-down transform transition-all duration-500 ${notification.type === 'success' ? 'bg-emerald-900/90 border-emerald-500/50 text-emerald-100' : 'bg-red-900/90 border-red-500/50 text-red-100'}`}>
+                  {notification.type === 'success' ? <CheckCircle size={18} /> : <Shield size={18} />}<span className="font-medium text-sm">{notification.message}</span>
+                </div>
+              )}
+
+              <header className="glass-panel border-b border-white/10 sticky top-0 z-40 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
+                  <div className="flex items-center gap-2 md:gap-3 group cursor-default">
+                    <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-2 rounded-lg md:rounded-xl shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+                      <Flame className="text-white w-5 h-5 md:w-6 md:h-6" fill="currentColor" />
+                    </div>
+                    <div>
+                      <h1 className="text-lg md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 tracking-tighter italic animate-burn">RING'S OF FIRE</h1>
+                      <div className="text-[8px] md:text-[10px] text-slate-400 tracking-widest font-mono uppercase hidden md:block">Ultimate Esports League</div>
+                    </div>
+                  </div>
+                  
+                  {role ? (
+                    <div className="flex items-center gap-3">
+                      <button onClick={handleLogout} className="text-xs md:text-sm text-slate-400 hover:text-white flex items-center gap-1 md:gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10">
+                        <LogOut size={14} /><span className="hidden md:inline">Exit</span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </header>
+
+              <main className="max-w-7xl mx-auto px-4 py-6 md:py-10 relative z-10">
+                {!role ? (
+                  <RoleSelection onSelect={setRole} showNotification={showNotification} authError={authError} />
+                ) : role === 'admin' ? (
+                  <AdminPanel tournaments={tournaments} showNotification={showNotification} userId={user?.uid} news={news} />
+                ) : (
+                  <PlayerPanel tournaments={tournaments} showNotification={showNotification} userId={user?.uid} />
+                )}
+              </main>
+            </div>
+          );
+        }
+
+        // --- Role Selection & Login ---
+        function RoleSelection({ onSelect, showNotification, authError }) {
+          const [showAdminLogin, setShowAdminLogin] = useState(false);
+          const [showPlayerAuth, setShowPlayerAuth] = useState(false);
+
+          return (
+            <div className="flex flex-col items-center justify-center py-4 min-h-[60vh]">
+              {authError && <div className="mb-6 bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg flex items-center gap-2 text-sm font-bold animate-pulse max-w-lg mx-auto text-center"><AlertTriangle size={20} className="shrink-0" /><span>{authError}</span></div>}
+              
+              {showAdminLogin && <AdminLoginModal onClose={() => setShowAdminLogin(false)} onLogin={() => onSelect('admin')} showNotification={showNotification} />}
+              {showPlayerAuth && <PlayerAuthModal onClose={() => setShowPlayerAuth(false)} onLogin={() => onSelect('player')} showNotification={showNotification} />}
+
+              <div className="text-center mb-10 md:mb-16 animate-fade-in relative px-2">
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-64 md:h-64 bg-cyan-500/20 blur-[60px] md:blur-[80px] rounded-full pointer-events-none"></div>
+                <div className="inline-block mb-2 md:mb-4 relative"><Flame size={50} className="md:w-20 md:h-20 text-cyan-500 animate-pulse absolute blur-xl opacity-50"/><Flame size={50} className="md:w-20 md:h-20 text-cyan-500 relative z-10"/></div>
+                <h2 className="text-4xl md:text-7xl font-black text-white mb-4 tracking-tight drop-shadow-2xl neon-text relative z-10">WELCOME TO <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-600">THE FUTURE</span></h2>
+                <p className="text-slate-400 text-sm md:text-xl max-w-xs md:max-w-lg mx-auto font-light relative z-10">Step into the fire. Compete for glory, honor, and rewards.</p>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 md:gap-8 w-full max-w-4xl relative z-10">
+                <button onClick={() => setShowPlayerAuth(true)} className="group relative overflow-hidden glass-card p-6 md:p-10 rounded-2xl md:rounded-3xl text-left h-48 md:h-72 flex flex-col justify-end hover:border-cyan-500/50 active:scale-95 transition-all">
+                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-25 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12"><Gamepad2 size={120} className="md:w-[200px] md:h-[200px]" /></div>
+                  <div className="relative z-10"><div className="bg-cyan-500/20 w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 text-cyan-400 group-hover:scale-110 transition-transform duration-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"><Crosshair size={20} className="md:w-8 md:h-8" /></div><h3 className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2 group-hover:text-cyan-400 transition-colors">Player Zone</h3><p className="text-slate-400 text-xs md:text-base group-hover:text-slate-300 transition-colors font-medium">Join matches, form squads, and verify your skills.</p></div>
+                </button>
+                <button onClick={() => setShowAdminLogin(true)} className="group relative overflow-hidden glass-card p-6 md:p-10 rounded-2xl md:rounded-3xl text-left h-48 md:h-72 flex flex-col justify-end hover:border-violet-500/50 active:scale-95 transition-all">
+                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-25 transition-all duration-500 group-hover:scale-110 group-hover:-rotate-12"><Shield size={120} className="md:w-[200px] md:h-[200px]" /></div>
+                  <div className="relative z-10"><div className="bg-violet-500/20 w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 text-violet-400 group-hover:scale-110 transition-transform duration-300 border border-violet-500/30 shadow-lg shadow-violet-500/10"><Lock size={20} className="md:w-8 md:h-8" /></div><h3 className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2 group-hover:text-violet-400 transition-colors">Organizer Zone</h3><p className="text-slate-400 text-xs md:text-base group-hover:text-slate-300 transition-colors font-medium">Manage the ring, set the prizes, and declare champions.</p></div>
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        // --- NEW: Player Auth Modal (Login/Signup) ---
+        function PlayerAuthModal({ onClose, onLogin, showNotification }) {
+          const [isSignUp, setIsSignUp] = useState(false);
+          const [email, setEmail] = useState('');
+          const [password, setPassword] = useState('');
+          const [loading, setLoading] = useState(false);
+          const [error, setError] = useState('');
+
+          const handleAuth = async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setError('');
+            try {
+                if (isSignUp) {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    showNotification("Account Created! Welcome, Player.");
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showNotification("Welcome back, Champion.");
+                }
+                onLogin();
+            } catch (err) {
+                console.error(err);
+                let msg = "Authentication Failed";
+                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') msg = "Invalid Email or Password";
+                if (err.code === 'auth/email-already-in-use') msg = "Email already in use";
+                if (err.code === 'auth/weak-password') msg = "Password too weak (min 6 chars)";
+                setError(msg);
+            } finally {
+                setLoading(false);
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+              <div className="glass-panel p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm relative border border-slate-700">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button>
+                <div className="text-center mb-6 md:mb-8">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/20 ring-4 ring-cyan-500/10">
+                    <Gamepad2 size={24} className="md:w-8 md:h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-white">Player Access</h3>
+                  <p className="text-slate-400 text-xs mt-1">{isSignUp ? "Join the League" : "Continue your Legacy"}</p>
+                </div>
+                <form onSubmit={handleAuth} className="space-y-3 md:space-y-4">
+                  <div><div className="relative group"><Mail size={18} className="absolute left-3.5 top-3.5 text-slate-500 group-focus-within:text-cyan-500 transition-colors" /><input type="email" placeholder="Email Address" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-white focus:border-cyan-500 outline-none transition-all placeholder:text-slate-600 text-sm" value={email} onChange={e => setEmail(e.target.value)} required /></div></div>
+                  <div><div className="relative group"><Key size={18} className="absolute left-3.5 top-3.5 text-slate-500 group-focus-within:text-cyan-500 transition-colors" /><input type="password" placeholder="Password" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-white focus:border-cyan-500 outline-none transition-all placeholder:text-slate-600 text-sm" value={password} onChange={e => setPassword(e.target.value)} required /></div></div>
+                  {error && <div className="text-red-400 text-xs text-center font-bold bg-red-500/10 py-2.5 rounded-lg border border-red-500/20 animate-pulse">{error}</div>}
+                  <button disabled={loading} type="submit" className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 md:py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2 text-sm md:text-base flex items-center justify-center gap-2">
+                    {loading ? <Loader2 size={18} className="animate-spin"/> : (isSignUp ? <UserPlus size={18}/> : <LogIn size={18}/>)}
+                    {isSignUp ? 'Create Account' : 'Login'}
+                  </button>
+                </form>
+                <div className="mt-4 text-center">
+                    <button onClick={() => setIsSignUp(!isSignUp)} className="text-xs text-slate-400 hover:text-cyan-400 transition-colors">
+                        {isSignUp ? "Already have an account? Login" : "New here? Create Account"}
+                    </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function AdminLoginModal({ onClose, onLogin, showNotification }) {
+          const [creds, setCreds] = useState({ id: '', password: '' });
+          const [error, setError] = useState('');
+          const handleLogin = (e) => { e.preventDefault(); if (creds.id === 'blackboom172' && creds.password === '1517') { showNotification('Access Granted.'); onLogin(); } else { setError('Access Denied'); setTimeout(() => setError(''), 2000); } };
+          return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+              <div className="glass-panel p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm relative border border-slate-700">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button>
+                <div className="text-center mb-6 md:mb-8"><div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/20 ring-4 ring-cyan-500/10"><Shield size={24} className="md:w-8 md:h-8 text-white" /></div><h3 className="text-lg md:text-xl font-bold text-white">Organizer Access</h3></div>
+                <form onSubmit={handleLogin} className="space-y-3 md:space-y-4">
+                  <div><div className="relative group"><User size={18} className="absolute left-3.5 top-3.5 text-slate-500 group-focus-within:text-cyan-500 transition-colors" /><input type="text" placeholder="Organizer ID" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-white focus:border-cyan-500 outline-none transition-all placeholder:text-slate-600 text-sm" value={creds.id} onChange={e => setCreds({...creds, id: e.target.value})} /></div></div>
+                  <div><div className="relative group"><Key size={18} className="absolute left-3.5 top-3.5 text-slate-500 group-focus-within:text-cyan-500 transition-colors" /><input type="password" placeholder="Passcode" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-white focus:border-cyan-500 outline-none transition-all placeholder:text-slate-600 text-sm" value={creds.password} onChange={e => setCreds({...creds, password: e.target.value})} /></div></div>
+                  {error && <div className="text-red-400 text-xs text-center font-bold bg-red-500/10 py-2.5 rounded-lg border border-red-500/20 animate-pulse">{error}</div>}
+                  <button type="submit" className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 md:py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2 text-sm md:text-base">Authenticate</button>
+                </form>
+              </div>
+            </div>
+          );
+        }
+
+        // --- News Editor Modal ---
+        function NewsEditorModal({ onClose, initialNews, showNotification }) {
+            const [items, setItems] = useState(initialNews || []);
+            const [newItem, setNewItem] = useState('');
+
+            const addItem = (e) => {
+                e.preventDefault();
+                if (newItem.trim()) {
+                    setItems([...items, newItem.trim()]);
+                    setNewItem('');
+                }
+            };
+
+            const removeItem = (index) => {
+                setItems(items.filter((_, i) => i !== index));
+            };
+
+            const saveNews = async () => {
+                try {
+                    const newsDoc = getSettingsDoc('news');
+                    if(newsDoc) {
+                        await setDoc(newsDoc, { items });
+                        showNotification("News Updated Successfully!");
+                        onClose();
+                    }
+                } catch(e) {
+                    console.error(e);
+                    showNotification("Failed to save news", "error");
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+                  <div className="glass-panel p-6 rounded-2xl w-full max-w-lg relative border border-slate-700">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button>
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Megaphone size={20} className="text-yellow-400"/> Edit News Ticker</h3>
+                    
+                    <div className="space-y-3 mb-6">
+                        <form onSubmit={addItem} className="flex gap-2">
+                            <input className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-cyan-500" placeholder="Type new announcement..." value={newItem} onChange={e=>setNewItem(e.target.value)}/>
+                            <button className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded-lg"><Plus size={20}/></button>
+                        </form>
+                        <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-2 bg-slate-900/50 p-2 rounded-lg">
+                            {items.length === 0 && <div className="text-slate-500 text-xs text-center py-4">No news items.</div>}
+                            {items.map((item, i) => (
+                                <div key={i} className="flex justify-between items-center bg-slate-800 p-2 rounded border border-slate-700">
+                                    <span className="text-sm text-slate-200">{item}</span>
+                                    <button onClick={()=>removeItem(i)} className="text-red-400 hover:text-red-300 p-1"><MinusCircle size={16}/></button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <button onClick={saveNews} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm flex justify-center items-center gap-2"><Save size={16}/> Save Changes</button>
+                  </div>
+                </div>
+            );
+        }
+
+        // --- Admin Components ---
+        function AdminPanel({ tournaments, showNotification, userId, news }) {
+          const [view, setView] = useState('list');
+          const [showNews, setShowNews] = useState(false);
+
+          return (
+            <div>
+              {showNews && <NewsEditorModal onClose={()=>setShowNews(false)} initialNews={news} showNotification={showNotification} />}
+              
+              <div className="flex justify-between items-center mb-6 md:mb-10">
+                <h2 className="text-xl md:text-3xl font-black text-white flex items-center gap-2 md:gap-3 tracking-tight"><Shield className="text-cyan-500 w-6 h-6 md:w-8 md:h-8" /> <span className="hidden md:inline">ORGANIZER DASHBOARD</span><span className="md:hidden">DASHBOARD</span></h2>
+                <div className="flex gap-2">
+                    {view === 'list' && (
+                        <button onClick={() => setShowNews(true)} className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 font-bold transition-all border border-slate-700 text-sm">
+                            <Megaphone size={16} className="text-yellow-400"/> <span className="hidden md:inline">Manage News</span>
+                        </button>
+                    )}
+                    {view === 'list' ? (
+                    <button onClick={() => setView('create')} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-cyan-500/20 hover:scale-105 text-sm md:text-base"><Plus size={18} /> <span className="hidden md:inline">Create Tournament</span><span className="md:hidden">Create</span></button>
+                    ) : (
+                    <button onClick={() => setView('list')} className="text-slate-400 hover:text-white px-2 py-2 font-medium transition-colors text-sm">&larr; Back</button>
+                    )}
+                </div>
+              </div>
+              {view === 'create' ? <CreateTournamentForm onComplete={() => { setView('list'); showNotification('Tournament successfully launched!'); }} userId={userId} showNotification={showNotification}/> : (
+                <div className="grid gap-4 md:gap-6 animate-fade-in-up">
+                  {tournaments.length === 0 ? <div className="text-center py-12 md:py-24 glass-panel rounded-2xl border-2 border-slate-800 border-dashed flex flex-col items-center"><div className="bg-slate-800/50 p-4 md:p-6 rounded-full mb-4 md:mb-6 ring-1 ring-white/5"><Gamepad2 size={48} className="text-slate-600 md:w-16 md:h-16" /></div><p className="text-slate-400 text-base md:text-xl font-medium">No active tournaments found.</p></div> : tournaments.map(tournament => <AdminTournamentCard key={tournament.id} data={tournament} showNotification={showNotification} />)}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const DEFAULT_RULES = "1. Teaming with other squads results in immediate DQ.\n2. Hackers will be permanently banned.\n3. Room ID/Pass shared 10 mins before start.\n4. Screenshot your result for disputes.";
+
+        function CreateTournamentForm({ onComplete, userId, showNotification }) {
+          const [loading, setLoading] = useState(false);
+          const [formData, setFormData] = useState({ 
+              game: 'Free Fire', format: 'Solo', title: '', map: 'Bermuda', date: '', time: '', 
+              entryFee: 0, prizePool: 0, totalSlots: 48,
+              rules: DEFAULT_RULES,
+              announcement: ''
+          });
+
+          const handleSubmit = async (e) => {
+            e.preventDefault(); setLoading(true);
+            try {
+              if (!formData.date || !formData.time) throw new Error("Please select a valid date and time.");
+              const dateTime = new Date(`${formData.date}T${formData.time}`);
+              if (isNaN(dateTime.getTime())) throw new Error("Invalid date format.");
+              const collectionRef = getTournamentCollection();
+              if (!collectionRef) throw new Error("Database not ready.");
+              await addDoc(collectionRef, { 
+                  ...formData, 
+                  entryFee: Number(formData.entryFee), 
+                  prizePool: Number(formData.prizePool), 
+                  totalSlots: Number(formData.totalSlots), 
+                  filledSlots: 0, 
+                  participants: [], 
+                  hostId: userId || 'unknown', 
+                  roomId: '', 
+                  roomPassword: '', 
+                  status: 'upcoming', 
+                  registrationOpen: true, 
+                  winner: '', 
+                  createdAt: serverTimestamp(), 
+                  dateTime: dateTime.toISOString() 
+              });
+              onComplete();
+            } catch (error) { console.error(error); showNotification(error.message || "Failed", "error"); } finally { setLoading(false); }
+          };
+
+          return (
+            <div className="glass-panel p-6 md:p-8 rounded-2xl border border-slate-700 max-w-3xl mx-auto animate-fade-in-up">
+              <div className="mb-6 md:mb-8 pb-4 md:pb-6 border-b border-slate-700/50"><h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2"><Zap size={20} className="text-cyan-400"/> New Tournament</h3></div>
+              <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                  <div><label className="block text-slate-400 text-xs font-bold mb-2">Game</label><select className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-cyan-500 outline-none text-sm" value={formData.game} onChange={e => setFormData({...formData, game: e.target.value})}><option>Free Fire</option><option>PUBG Mobile</option><option>BGMI</option><option>COD Mobile</option></select></div>
+                  <div><label className="block text-slate-400 text-xs font-bold mb-2">Format</label><select className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-cyan-500 outline-none text-sm" value={formData.format} onChange={e => setFormData({...formData, format: e.target.value})}><option>Solo</option><option>Duo</option><option>Squad</option></select></div>
+                  <div><label className="block text-slate-400 text-xs font-bold mb-2">Map</label><input required className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-cyan-500 outline-none text-sm" placeholder="e.g. Bermuda" value={formData.map} onChange={e => setFormData({...formData, map: e.target.value})} /></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <input required type="text" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-cyan-500 outline-none text-sm" placeholder="Tournament Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+                    <div className="flex gap-2 md:gap-4"><input required type="date" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-3 text-white focus:border-cyan-500 outline-none text-sm" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} /><input required type="time" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-3 text-white focus:border-cyan-500 outline-none text-sm" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} /></div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 md:gap-6">
+                    <input required type="number" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-3 text-white focus:border-cyan-500 outline-none text-sm" placeholder="Fee" value={formData.entryFee} onChange={e => setFormData({...formData, entryFee: e.target.value})} />
+                    <input required type="number" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-3 text-white focus:border-cyan-500 outline-none text-sm" placeholder="Prize" value={formData.prizePool} onChange={e => setFormData({...formData, prizePool: e.target.value})} />
+                    <input required type="number" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-3 text-white focus:border-cyan-500 outline-none text-sm" placeholder="Slots" value={formData.totalSlots} onChange={e => setFormData({...formData, totalSlots: e.target.value})} />
+                </div>
+                
+                {/* Rules Field */}
+                <div>
+                    <label className="block text-slate-400 text-xs font-bold mb-2">Tournament Rules</label>
+                    <textarea 
+                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-cyan-500 outline-none text-sm h-24 resize-none custom-scrollbar" 
+                        placeholder="Enter rules here..." 
+                        value={formData.rules} 
+                        onChange={e => setFormData({...formData, rules: e.target.value})} 
+                    />
+                </div>
+
+                <button disabled={loading} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 md:py-4 rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex justify-center text-sm md:text-base">{loading ? 'Launching...' : 'Launch Tournament'}</button>
+              </form>
+            </div>
+          );
+        }
+
+        function AdminTournamentCard({ data, showNotification }) {
+          const [expanded, setExpanded] = useState(false);
+          const [editing, setEditing] = useState(false);
+          const [resultModal, setResultModal] = useState(false);
+          const [room, setRoom] = useState({ id: data.roomId || '', pass: data.roomPassword || '' });
+          const [winner, setWinner] = useState(data.winner || '');
+          const [isEditingDetails, setIsEditingDetails] = useState(false);
+          const [editForm, setEditForm] = useState({});
+
+          useEffect(() => { if (data.winner) setWinner(data.winner); }, [data.winner]);
+
+          const toggleRegistration = async () => {
+            const docRef = getTournamentDoc(data.id);
+            if (docRef) { await updateDoc(docRef, { registrationOpen: !data.registrationOpen }); showNotification(!data.registrationOpen ? "Registration Resumed" : "Registration Paused"); }
+          };
+          const updateRoom = async (e) => { e.preventDefault(); const docRef = getTournamentDoc(data.id); if (docRef) { await updateDoc(docRef, { roomId: room.id, roomPassword: room.pass }); setEditing(false); showNotification("Room Updated"); } };
+          const verifyUser = async (uid) => { const docRef = getTournamentDoc(data.id); if (docRef) { await updateDoc(docRef, { participants: data.participants.map(p => p.userId === uid ? { ...p, paymentVerified: true } : p) }); showNotification("Verified"); } };
+          const removeUser = async (uid) => { const docRef = getTournamentDoc(data.id); if (docRef) { await updateDoc(docRef, { participants: data.participants.filter(p => p.userId !== uid), filledSlots: increment(-(data.format === 'Squad' ? 4 : data.format === 'Duo' ? 2 : 1)) }); showNotification("Removed"); } };
+          const saveWinner = async () => { const docRef = getTournamentDoc(data.id); if (docRef) { await updateDoc(docRef, { status: 'completed', winner }); setResultModal(false); showNotification("Winner Declared"); } };
+          const deleteT = async () => { if(confirm("Delete tournament?")) { const docRef = getTournamentDoc(data.id); if(docRef) await deleteDoc(docRef); } };
+          
+          const slotsLeft = Math.max(0, data.totalSlots - (data.filledSlots || 0));
+          
+          const startEditingDetails = () => {
+            // Extract date and time from ISO string
+            const dateObj = new Date(data.dateTime);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            const timeStr = dateObj.toTimeString().slice(0, 5);
+            
+            setEditForm({
+                title: data.title,
+                game: data.game,
+                map: data.map,
+                entryFee: data.entryFee,
+                prizePool: data.prizePool,
+                totalSlots: data.totalSlots,
+                rules: data.rules || DEFAULT_RULES, // Load existing rules or default
+                announcement: data.announcement || '',
+                date: dateStr,
+                time: timeStr
+            });
+            setIsEditingDetails(true);
+          };
+
+          const handleSaveDetails = async (e) => {
+              e.preventDefault();
+              try {
+                  const dateTime = new Date(`${editForm.date}T${editForm.time}`);
+                  if (isNaN(dateTime.getTime())) throw new Error("Invalid Date/Time");
+                  
+                  const docRef = getTournamentDoc(data.id);
+                  await updateDoc(docRef, {
+                      title: editForm.title,
+                      game: editForm.game,
+                      map: editForm.map,
+                      entryFee: Number(editForm.entryFee),
+                      prizePool: Number(editForm.prizePool),
+                      totalSlots: Number(editForm.totalSlots),
+                      rules: editForm.rules, // Save updated rules
+                      announcement: editForm.announcement,
+                      dateTime: dateTime.toISOString()
+                  });
+                  setIsEditingDetails(false);
+                  showNotification("Tournament Updated Successfully");
+              } catch(e) {
+                  console.error(e);
+                  alert(e.message);
+              }
+          };
+
+          if (isEditingDetails) {
+             return (
+                 <div className="glass-card rounded-2xl p-6 bg-slate-900/90 border border-blue-500/30">
+                     <h4 className="text-white font-bold mb-4 flex items-center gap-2"><Pencil size={16} /> Edit Tournament</h4>
+                     <form onSubmit={handleSaveDetails} className="space-y-4">
+                        <input className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.title} onChange={e=>setEditForm({...editForm, title:e.target.value})} placeholder="Title" required/>
+                        <div className="grid grid-cols-2 gap-2">
+                            <input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.date} onChange={e=>setEditForm({...editForm, date:e.target.value})} type="date" required/>
+                            <input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.time} onChange={e=>setEditForm({...editForm, time:e.target.value})} type="time" required/>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.entryFee} onChange={e=>setEditForm({...editForm, entryFee:e.target.value})} type="number" placeholder="Fee" required/>
+                            <input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.prizePool} onChange={e=>setEditForm({...editForm, prizePool:e.target.value})} type="number" placeholder="Prize" required/>
+                             <input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.totalSlots} onChange={e=>setEditForm({...editForm, totalSlots:e.target.value})} type="number" placeholder="Slots" required/>
+                        </div>
+                        <input className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.map} onChange={e=>setEditForm({...editForm, map:e.target.value})} placeholder="Map" required/>
+                        
+                        {/* Edit Rules */}
+                        <textarea 
+                            className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm h-24 resize-none custom-scrollbar" 
+                            value={editForm.rules} 
+                            onChange={e=>setEditForm({...editForm, rules:e.target.value})} 
+                            placeholder="Rules" 
+                        />
+                        
+                        {/* Notice Board Field */}
+                        <div>
+                            <label className="block text-slate-400 text-xs font-bold mb-1">Match Notice (Visible to Players)</label>
+                            <input 
+                                className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" 
+                                value={editForm.announcement} 
+                                onChange={e=>setEditForm({...editForm, announcement:e.target.value})} 
+                                placeholder="e.g. Room ID delayed by 10 mins" 
+                            />
+                        </div>
+
+                        <div className="flex gap-2 justify-end pt-2">
+                            <button type="button" onClick={()=>setIsEditingDetails(false)} className="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancel</button>
+                            <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded font-bold hover:bg-blue-500">Save Changes</button>
+                        </div>
+                     </form>
+                 </div>
+             );
+          }
+
+          return (
+            <div className={`glass-card rounded-2xl overflow-hidden ${data.status === 'completed' ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+              <div className="p-4 md:p-6 flex flex-col md:flex-row gap-4 md:gap-6 justify-between items-start md:items-center">
+                <div className="flex-1 w-full">
+                  <div className="flex gap-2 mb-2 md:mb-3">
+                    <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded uppercase">{data.game}</span>
+                    <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded uppercase">{data.format}</span>
+                    {!data.registrationOpen && data.status !== 'completed' && <span className="text-[10px] font-bold bg-red-500/20 text-red-400 px-2 py-1 rounded uppercase flex items-center gap-1"><Pause size={10}/> Paused</span>}
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2">
+                      {data.title}
+                      <button onClick={startEditingDetails} className="text-slate-500 hover:text-blue-400 transition-colors"><Pencil size={14}/></button>
+                  </h3>
+                  <div className="text-xs md:text-sm text-slate-400 flex flex-wrap gap-4">
+                    <span className="flex gap-1"><Calendar size={14}/> {formatDate(data.dateTime)} • {formatTime(data.dateTime)}</span>
+                    <span className="text-emerald-400">Prize: ₹{data.prizePool}</span>
+                    <span className={`flex gap-1 items-center font-bold ${slotsLeft === 0 ? 'text-red-400' : 'text-cyan-400'}`}><Users size={14}/> {data.filledSlots || 0}/{data.totalSlots} Filled</span>
+                  </div>
+                  {data.winner && <div className="mt-4 bg-yellow-500/10 text-yellow-400 p-2 rounded w-fit text-sm font-bold">WINNER: {data.winner}</div>}
+                </div>
+                <div className="flex gap-2 w-full md:w-auto justify-end">
+                  <button onClick={() => { setWinner(data.winner || ''); setResultModal(true); }} className="flex-1 md:flex-none p-2.5 text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 rounded-xl flex justify-center" title="Declare Winner"><Award size={20}/></button>
+                  <button onClick={toggleRegistration} className={`flex-1 md:flex-none p-2.5 rounded-xl flex justify-center ${data.registrationOpen ? 'text-orange-400 bg-orange-500/10 hover:bg-orange-500/20' : 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'}`}>{data.registrationOpen ? <Pause size={20}/> : <PlayCircle size={20}/>}</button>
+                  <button onClick={() => setExpanded(!expanded)} className="flex-1 md:flex-none p-2.5 text-slate-400 bg-slate-800 hover:bg-slate-700 rounded-xl flex justify-center" title="View Players"><Users size={20}/></button>
+                  <button onClick={deleteT} className="flex-1 md:flex-none p-2.5 text-red-400 bg-red-900/20 hover:bg-red-900/30 rounded-xl flex justify-center" title="Delete"><Trash2 size={20}/></button>
+                </div>
+              </div>
+              {expanded && (
+                <div className="bg-slate-950/50 border-t border-slate-800 p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="bg-slate-900/60 p-4 md:p-5 rounded-xl border border-slate-800 h-fit order-2 md:order-1">
+                      <div className="flex justify-between mb-4"><h4 className="text-sm font-bold text-white">Room Details</h4><button onClick={() => setEditing(true)} className="text-xs text-cyan-400"><Edit3 size={12}/></button></div>
+                      {editing ? <form onSubmit={updateRoom} className="space-y-3"><input className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white text-sm" value={room.id} onChange={e=>setRoom({...room, id:e.target.value})} placeholder="ID"/><input className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white text-sm" value={room.pass} onChange={e=>setRoom({...room, pass:e.target.value})} placeholder="Pass"/><button className="bg-emerald-600 text-white px-3 py-1 rounded text-xs">Save</button></form> : <div className="space-y-2 text-sm text-white"><div className="flex justify-between"><span>ID:</span> <span>{data.roomId || '--'}</span></div><div className="flex justify-between"><span>Pass:</span> <span>{data.roomPassword || '--'}</span></div></div>}
+                  </div>
+                  <div className="order-1 md:order-2">
+                    <h4 className="text-sm font-bold text-slate-400 mb-4">Players ({data.participants?.length || 0})</h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                       {data.participants?.map((p, i) => (
+                         <div key={i} className="p-3 rounded border border-slate-800 bg-slate-900/50 flex flex-col gap-2">
+                           <div className="flex justify-between items-center"><div><div className="text-white text-sm font-bold">{p.inGameName}</div><div className="text-[10px] text-slate-500">TXN: {p.paymentId}</div></div><div className="flex gap-2">{!p.paymentVerified && <button onClick={()=>verifyUser(p.userId)} className="text-emerald-400 p-1 bg-emerald-500/10 rounded"><Check size={14}/></button>}<button onClick={()=>removeUser(p.userId)} className="text-red-400 p-1 bg-red-500/10 rounded"><Trash2 size={14}/></button></div></div>
+                           {(p.upiId || p.upiName) && (<div className="pt-2 border-t border-slate-800/50 flex flex-col gap-1"><div className="text-[10px] text-cyan-400 font-bold uppercase flex items-center gap-1"><Wallet size={10}/> Winning Payment Info</div><div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400"><div><span className="text-slate-600">UPI ID:</span> <span className="text-slate-300 select-all">{p.upiId}</span></div><div><span className="text-slate-600">Name:</span> <span className="text-slate-300">{p.upiName}</span></div></div></div>)}
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {resultModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+                    <div className="glass-panel p-6 md:p-8 rounded-2xl w-full max-w-sm"><h3 className="text-xl font-bold text-white mb-4 text-center">Set Winner</h3><input className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 outline-none focus:border-yellow-500 text-sm" placeholder="Winner Name" value={winner} onChange={e => setWinner(e.target.value)} /><div className="flex gap-3"><button onClick={saveWinner} className="flex-1 bg-yellow-600 text-slate-900 font-bold py-3 rounded-xl text-sm">Confirm</button><button onClick={() => setResultModal(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl text-sm">Cancel</button></div></div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // --- NEW: Player Tournament Card with TABS ---
+        function PlayerTournamentCard({ t, joined, verified, slotsLeft, percentFilled, isFull, setSelected }) {
+            const [activeTab, setActiveTab] = useState('overview');
+            // State to trigger re-render for time check
+            const [now, setNow] = useState(Date.now());
+
+            useEffect(() => {
+                const interval = setInterval(() => setNow(Date.now()), 30000); // Check every 30s
+                return () => clearInterval(interval);
+            }, []);
+
+            // Room Reveal Logic (15 minutes = 900000 ms)
+            const matchTime = new Date(t.dateTime).getTime();
+            const timeUntilMatch = matchTime - now;
+            const isRevealTime = timeUntilMatch <= 900000; 
+            
+            return (
+                <div className={`glass-card rounded-2xl overflow-hidden flex flex-col ${t.status === 'completed' ? 'opacity-60' : ''}`}>
+                    <div className="h-32 md:h-36 bg-gradient-to-t from-slate-900 via-cyan-900/20 to-cyan-900/10 relative p-4 flex flex-col justify-end">
+                        <div className="flex justify-between items-end"><span className="bg-cyan-600 text-[10px] font-bold px-2 py-1 rounded text-white uppercase">{t.game}</span><span className="text-yellow-400 font-black text-sm flex items-center gap-1"><Trophy size={14}/> ₹{t.prizePool}</span></div>
+                        <h3 className="text-base md:text-lg font-bold text-white mt-2 truncate">{t.title}</h3>
+                    </div>
+                    
+                    {/* Tabs Header */}
+                    <div className="flex border-b border-slate-800">
+                        <button onClick={()=>setActiveTab('overview')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide ${activeTab==='overview' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300'}`}>Overview</button>
+                        <button onClick={()=>setActiveTab('players')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide ${activeTab==='players' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300'}`}>Players</button>
+                        <button onClick={()=>setActiveTab('prizes')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide ${activeTab==='prizes' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300'}`}>Prizes</button>
+                        <button onClick={()=>setActiveTab('rules')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide ${activeTab==='rules' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300'}`}>Rules</button>
+                    </div>
+
+                    <div className="p-4 md:p-5 flex-1 flex flex-col gap-3 md:gap-4 text-xs text-slate-300">
+                        {activeTab === 'overview' && (
+                            <div className="animate-fade-in space-y-4">
+                                <div className="grid grid-cols-2 gap-2 md:gap-3"><div className="bg-slate-900/40 p-2 rounded"><Calendar size={12}/> {formatDate(t.dateTime)} • {formatTime(t.dateTime)}</div><div className="bg-slate-900/40 p-2 rounded flex gap-1"><Timer size={12}/> <CountdownTimer targetDate={t.dateTime}/></div></div>
+                                
+                                {/* Notice Board */}
+                                {t.announcement && (
+                                    <div className="bg-orange-500/10 border-b border-orange-500/20 p-3 flex items-start gap-2 rounded-lg">
+                                        <Megaphone size={14} className="text-orange-400 mt-0.5 shrink-0 animate-bounce"/>
+                                        <p className="text-orange-200 text-xs font-medium">{t.announcement}</p>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <div className="flex justify-between text-[10px] font-bold mb-1.5"><span className="text-slate-500 uppercase">Registration</span><span className={isFull ? "text-red-400 animate-pulse" : "text-cyan-400"}>{slotsLeft} Slots Left</span></div>
+                                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div className={`h-full transition-all duration-500 ${isFull ? 'bg-red-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`} style={{ width: `${percentFilled}%` }}></div></div>
+                                </div>
+                                {joined && (
+                                    <div className={`border rounded p-3 ${verified ? 'bg-slate-950/80 border-cyan-500/30' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
+                                        {!verified ? (
+                                            <div className="flex gap-2 text-yellow-400 items-center font-bold text-[10px] md:text-xs"><AlertTriangle size={12}/> VERIFICATION PENDING</div>
+                                        ) : !isRevealTime && t.status !== 'completed' ? (
+                                            <div className="text-center py-2">
+                                                <div className="text-cyan-400 font-bold flex items-center justify-center gap-2 mb-1"><Lock size={14}/> ROOM LOCKED</div>
+                                                <div className="text-[10px] text-slate-500">ID & Password will be revealed 15 mins before match start.</div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1 animate-fade-in">
+                                                <div className="flex justify-between text-slate-400 uppercase font-bold text-[10px] md:text-xs"><span>ID</span> <span className="text-white select-all">{t.roomId || 'Coming Soon'}</span></div>
+                                                <div className="flex justify-between text-slate-400 uppercase font-bold text-[10px] md:text-xs"><span>Pass</span> <span className="text-white select-all">{t.roomPassword || 'Coming Soon'}</span></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'players' && (
+                            <div className="animate-fade-in space-y-2">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Participant List</span>
+                                    <span className="text-[10px] font-bold text-cyan-500">{t.participants?.length || 0} Joined</span>
+                                </div>
+                                <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                    {t.participants && t.participants.length > 0 ? (
+                                        t.participants.map((p, i) => (
+                                            <div key={i} className="flex justify-between items-center bg-slate-800/40 p-2 rounded border border-slate-700/50 hover:bg-slate-800/70 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-400 border border-slate-600">{i+1}</div>
+                                                    <span className="text-slate-200 font-bold text-[11px] truncate max-w-[100px]">{p.inGameName}</span>
+                                                </div>
+                                                <span className="text-slate-500 text-[10px] truncate max-w-[80px]">{p.name}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-slate-500 py-8 italic text-xs border border-dashed border-slate-800 rounded-xl">
+                                            Lobby is empty.<br/>Be the first to join!
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'prizes' && (
+                            <div className="animate-fade-in space-y-2">
+                                <div className="flex justify-between p-3 bg-yellow-500/10 rounded border border-yellow-500/20 items-center">
+                                    <span className="font-bold text-yellow-400 flex items-center gap-2"><Trophy size={18}/> Winner Takes All</span>
+                                    <span className="font-black text-white text-lg">₹{t.prizePool}</span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 text-center mt-2">*Per Kill: ₹0 (Standard)</div>
+                            </div>
+                        )}
+
+                        {activeTab === 'rules' && (
+                            <div className="animate-fade-in space-y-2 text-[10px] text-slate-400 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                {/* Display Dynamic Rules if available, else default */}
+                                {t.rules ? (
+                                    <div className="whitespace-pre-wrap">{t.rules}</div>
+                                ) : (
+                                    <>
+                                        <p>1. Teaming with other squads results in immediate DQ.</p>
+                                        <p>2. Hackers will be permanently banned.</p>
+                                        <p>3. Room ID/Pass shared 10 mins before start.</p>
+                                        <p>4. Screenshot your result for disputes.</p>
+                                        <div className="bg-slate-800 p-2 rounded mt-2">
+                                            <div className="font-bold text-slate-300 mb-1">Points System</div>
+                                            <div className="grid grid-cols-2 gap-2"><span>Booyah: 12pts</span><span>2nd: 9pts</span><span>Kill: 1pt</span></div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="mt-auto pt-3 md:pt-4 border-t border-slate-800/50 flex justify-between items-center">
+                            <div className="text-white font-bold text-base md:text-lg">₹{t.entryFee}</div>
+                            {joined ? (
+                                verified ? (
+                                    <button disabled className="bg-emerald-600/20 text-emerald-400 px-3 py-2 md:px-4 md:py-2 rounded font-bold flex gap-2 text-xs md:text-sm"><CheckCircle size={16}/> JOINED</button>
+                                ) : (
+                                    <button disabled className="bg-yellow-600/20 text-yellow-400 px-3 py-2 md:px-4 md:py-2 rounded font-bold flex gap-2 text-xs md:text-sm animate-pulse"><Loader2 size={16} className="animate-spin"/> WAITING...</button>
+                                )
+                            ) : t.status === 'completed' ? (
+                                <button disabled className="text-slate-500 font-bold text-xs md:text-sm">ENDED</button>
+                            ) : isFull ? (
+                                <button disabled className="bg-slate-800 text-red-400 border border-red-500/30 px-4 py-2 md:px-6 rounded font-bold text-xs md:text-sm flex items-center gap-2 cursor-not-allowed"><AlertOctagon size={14}/> FULL</button>
+                            ) : !t.registrationOpen ? (
+                                <button disabled className="bg-slate-800 text-slate-500 px-4 py-2 md:px-6 rounded font-bold text-xs md:text-sm flex items-center gap-2 cursor-not-allowed"><Pause size={14}/> PAUSED</button>
+                            ) : (
+                                <button onClick={()=>setSelected(t)} className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 md:px-6 rounded font-bold shadow-lg shadow-cyan-500/30 text-xs md:text-sm">JOIN</button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function PlayerPanel({ tournaments, showNotification, userId }) {
+          const [view, setView] = useState('home');
+          const [selected, setSelected] = useState(null);
+          const champion = useMemo(() => { const comp = tournaments.filter(t => t.status === 'completed' && t.winner); return comp.length ? comp.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))[0] : null; }, [tournaments]);
+          return (
+            <div>
+              {view === 'home' && champion && (
+                <div className="mb-8 md:mb-12 animate-fade-in">
+                    <h3 className="text-xs md:text-sm font-bold text-cyan-500 uppercase tracking-widest mb-2 md:mb-4 flex items-center gap-2"><Flame size={14}/> Hall of Fame</h3>
+                    <div className="glass-card rounded-2xl p-4 md:p-6 border-yellow-500/30 bg-gradient-to-r from-yellow-900/20 to-cyan-900/10 flex items-center gap-4 md:gap-6 relative overflow-hidden">
+                      <div className="w-14 h-14 md:w-20 md:h-20 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-400 border-2 border-yellow-500/50 shrink-0"><Award size={28} className="md:w-10 md:h-10"/></div>
+                      <div><div className="text-[10px] md:text-xs text-yellow-500 font-bold uppercase">Reigning Champion</div><h2 className="text-2xl md:text-4xl font-black text-white neon-text truncate max-w-[200px] md:max-w-md">{champion.winner}</h2><p className="text-slate-400 text-xs md:text-sm">Won {champion.title}</p></div>
+                    </div>
+                </div>
+              )}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-8 gap-4">
+                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">BATTLE<span className="text-cyan-500">GROUNDS</span></h2>
+                <div className="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800 w-full md:w-auto overflow-x-auto custom-scrollbar">
+                    <button onClick={()=>setView('home')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap ${view==='home'?'bg-cyan-600 text-white':'text-slate-400'}`}>Events</button>
+                    <button onClick={()=>setView('profile')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap ${view==='profile'?'bg-cyan-600 text-white':'text-slate-400'}`}>Profile</button>
+                    
+                    {/* Contact Button (Instagram) */}
+                    <a href="https://www.instagram.com/rings.of.fire.offical?igsh=MXBtY3hjbGFob3BicQ==" target="_blank" rel="noreferrer" className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap text-slate-400 hover:text-pink-500 flex items-center gap-2 transition-colors border border-transparent hover:bg-pink-500/10 hover:border-pink-500/20">
+                        <Instagram size={16}/> Contact
+                    </a>
+
+                    {/* New Telegram Group Button */}
+                    <a href="https://t.me/ringsoffire1" target="_blank" rel="noreferrer" className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap text-slate-400 hover:text-blue-400 flex items-center gap-2 transition-colors border border-transparent hover:bg-blue-500/10 hover:border-blue-500/20">
+                        <Send size={16}/> Group
+                    </a>
+                </div>
+              </div>
+              {view === 'profile' ? <PlayerProfile userId={userId} tournaments={tournaments} /> : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up">
+                  {tournaments.map(t => {
+                      const joined = t.participants?.find(p => p.userId === userId);
+                      const verified = joined?.paymentVerified;
+                      const filled = t.filledSlots || 0; const total = t.totalSlots || 1; const slotsLeft = Math.max(0, total - filled); const percentFilled = Math.min(100, (filled / total) * 100); const isFull = slotsLeft === 0;
+                      return <PlayerTournamentCard key={t.id} t={t} joined={joined} verified={verified} slotsLeft={slotsLeft} percentFilled={percentFilled} isFull={isFull} setSelected={setSelected} />;
+                  })}
+                </div>
+              )}
+              {selected && <PaymentModal tournament={selected} onClose={()=>setSelected(null)} userId={userId} showNotification={showNotification} />}
+            </div>
+          );
+        }
+
+        function PlayerProfile({ userId, tournaments }) {
+          const myGames = useMemo(() => tournaments.filter(t => t.participants?.some(p => p.userId === userId)), [tournaments, userId]);
+          const stats = { count: myGames.length, spent: myGames.reduce((a,b)=>a+b.entryFee,0), wins: myGames.filter(t=>t.winner && t.participants.find(p=>p.userId===userId && p.inGameName===t.winner)).length };
+          return (
+            <div className="max-w-5xl mx-auto animate-fade-in">
+               <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-10">
+                 <div className="glass-panel p-3 md:p-6 rounded-xl md:rounded-2xl border-b-4 border-cyan-500 text-center md:text-left"><div className="text-xl md:text-3xl font-black text-white">{stats.count}</div><div className="text-[10px] md:text-xs text-slate-400 font-bold uppercase">Matches</div></div>
+                 <div className="glass-panel p-3 md:p-6 rounded-xl md:rounded-2xl border-b-4 border-yellow-500 text-center md:text-left"><div className="text-xl md:text-3xl font-black text-white">{stats.wins}</div><div className="text-[10px] md:text-xs text-slate-400 font-bold uppercase">Wins</div></div>
+                 <div className="glass-panel p-3 md:p-6 rounded-xl md:rounded-2xl border-b-4 border-purple-500 text-center md:text-left"><div className="text-xl md:text-3xl font-black text-white">₹{stats.spent}</div><div className="text-[10px] md:text-xs text-slate-400 font-bold uppercase">Invested</div></div>
+               </div>
+               <div className="glass-panel rounded-2xl p-4 md:p-6">
+                 <h3 className="font-bold text-white text-base md:text-lg mb-4 md:mb-6 flex gap-2 items-center"><History size={20}/> Match History</h3>
+                 <div className="space-y-2 md:space-y-4">
+                   {myGames.map(t => (
+                     <div key={t.id} className="p-3 md:p-4 rounded bg-slate-900/40 flex justify-between items-center">
+                       <div><div className="font-bold text-white text-sm md:text-base">{t.title}</div><div className="text-[10px] md:text-xs text-slate-500">{new Date(t.dateTime).toLocaleDateString()}</div></div>
+                       <div className="text-right">{t.winner && t.participants.find(p=>p.userId===userId && p.inGameName===t.winner) ? <span className="text-yellow-400 font-black text-xs md:text-sm">VICTORY</span> : <span className="text-slate-500 font-bold uppercase text-xs md:text-sm">{t.status}</span>}</div>
+                     </div>
+                   ))}
+                   {!myGames.length && <div className="text-center text-slate-500 text-sm">No matches played yet.</div>}
+                 </div>
+               </div>
+            </div>
+          );
+        }
+
+        function PaymentModal({ tournament, onClose, userId, showNotification }) {
+          const [step, setStep] = useState(1);
+          const [loading, setLoading] = useState(false);
+          const req = tournament.format === 'Squad' ? 4 : tournament.format === 'Duo' ? 2 : 1;
+          const [form, setForm] = useState({ name: '', ign: '', txn: '', team: Array(req-1).fill(''), upiId: '', upiName: '' });
+          
+          // Auto-Close Timer State
+          const [autoCloseTimer, setAutoCloseTimer] = useState(5);
+
+          useEffect(() => {
+            let interval;
+            if (step === 3) {
+                interval = setInterval(() => {
+                    setAutoCloseTimer((prev) => {
+                        if (prev <= 1) {
+                            clearInterval(interval);
+                            onClose();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+            }
+            return () => clearInterval(interval);
+          }, [step, onClose]);
+
+          const handleFakeProcess = async (e) => {
+              e.preventDefault(); 
+              setLoading(true); 
+              
+              try {
+                const docRef = getTournamentDoc(tournament.id);
+                if (docRef) { 
+                    await updateDoc(docRef, { 
+                        filledSlots: increment(req), 
+                        participants: arrayUnion({ 
+                            userId, 
+                            name: form.name, 
+                            inGameName: form.ign, 
+                            teammates: form.team, 
+                            paymentId: form.txn, 
+                            paymentVerified: false, 
+                            joinedAt: new Date().toISOString(), 
+                            upiId: form.upiId, 
+                            upiName: form.upiName 
+                        }) 
+                    }); 
+                }
+                setStep(3); 
+                showNotification("Request Submitted");
+              } catch(e) { 
+                  console.error(e); 
+                  alert("Error submitting. Please try again.");
+              } finally {
+                  setLoading(false); 
+              }
+          };
+          
+          const upiString = `upi://pay?pa=7042368784@pthdfc&pn=Fardeen&am=${tournament.entryFee}&cu=INR`;
+          const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+          
+          return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-fade-in">
+              <div className="glass-panel rounded-3xl w-full max-w-lg border border-slate-700 shadow-2xl overflow-hidden relative h-[85vh] max-h-[800px] flex flex-col">
+                {step !== 3 && <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white z-10"><X size={24}/></button>}
+                
+                {step === 1 ? (
+                  <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1">
+                      <h3 className="text-xl md:text-2xl font-black text-white mb-6">Registration</h3>
+                      <form onSubmit={e => {e.preventDefault(); setStep(2)}} className="space-y-4">
+                        <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="Your Name" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} />
+                        <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="In-Game Name" value={form.ign} onChange={e=>setForm({...form, ign:e.target.value})} />
+                        {req > 1 && <div className="space-y-2"><label className="text-xs font-bold text-slate-500">Teammates</label>{form.team.map((t,i)=><input key={i} required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder={`Teammate ${i+1}`} value={t} onChange={ev=>{const n=[...form.team]; n[i]=ev.target.value; setForm({...form, team:n})}} />)}</div>}
+                        <div className="pt-4 border-t border-slate-800"><h4 className="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2"><Wallet size={16}/> For Winning Payouts</h4><div className="space-y-3"><div><label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">UPI ID</label><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="e.g. user@upi" value={form.upiId} onChange={e=>setForm({...form, upiId:e.target.value})} /></div><div><label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Registered Name</label><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none text-sm" placeholder="e.g. John Doe" value={form.upiName} onChange={e=>setForm({...form, upiName:e.target.value})} /></div></div></div>
+                        <button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 md:py-4 rounded-xl mt-2 text-sm md:text-base flex justify-center items-center gap-2">Next Step <ChevronRight size={18}/></button>
+                      </form>
+                  </div>
+                ) : step === 2 ? (
+                  <div className="flex-1 flex flex-col h-full min-h-0">
+                      <div className="bg-white p-4 flex justify-between items-center border-b border-gray-200 shrink-0 z-10 relative"><div className="flex items-center gap-2"><div className="bg-blue-600 p-1.5 rounded text-white"><ShieldCheck size={16}/></div><span className="text-slate-800 font-bold text-sm">Secure Checkout</span></div><div className="text-right"><div className="text-[10px] text-slate-500 font-bold uppercase">Session Expires</div><PaymentTimer initialSeconds={300} onExpire={onClose}/></div></div>
+                      
+                      <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-50 pb-40">
+                          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-4">
+                              <div className="flex justify-between items-center mb-2"><span className="text-slate-500 text-xs uppercase font-bold">Total Amount</span><span className="text-slate-900 font-black text-xl">₹{tournament.entryFee}.00</span></div>
+                              <div className="text-xs text-slate-400 flex items-center gap-1"><ShieldCheck size={10}/> 256-bit SSL Encrypted</div>
+                          </div>
+                          
+                          <h4 className="text-slate-700 font-bold text-sm mb-3">Select Payment Method</h4>
+                          <div className="space-y-3 mb-6">
+                              <a href={upiString} className="block bg-white hover:bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center gap-4 transition-all group"><div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><Smartphone size={20}/></div><div className="flex-1"><div className="text-slate-800 font-bold text-sm group-hover:text-blue-600">Pay via UPI App</div><div className="text-slate-400 text-xs">GPay, PhonePe, Paytm</div></div><ChevronRight size={16} className="text-slate-300 group-hover:text-blue-500"/></a>
+                              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden"><div className="p-4 flex items-center gap-4 border-b border-slate-100"><div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><QrCode size={20}/></div><div className="flex-1"><div className="text-slate-800 font-bold text-sm">Scan QR Code</div><div className="text-slate-400 text-xs">Use any UPI app to scan</div></div></div><div className="p-6 bg-slate-50 flex justify-center"><div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200"><img src={qrCodeUrl} alt="QR" className="w-32 h-32 mix-blend-multiply" /></div></div></div>
+                          </div>
+                          
+                          <div className="mt-6 bg-white p-4 rounded-xl border-2 border-blue-100 shadow-lg shadow-blue-100/50 relative z-0">
+                              <h4 className="text-blue-900 font-bold text-sm mb-3 flex items-center gap-2">
+                                  <div className="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">2</div>
+                                  Enter Payment Details
+                              </h4>
+                              
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex gap-2 items-start">
+                                  <Info size={16} className="text-blue-600 mt-0.5 shrink-0"/>
+                                  <span className="text-xs text-blue-800 font-medium">
+                                      After paying via UPI, enter the 12-digit UTR/Transaction ID below.
+                                      <br/>
+                                      <span className="font-bold">Admin approval takes ~5 minutes.</span>
+                                  </span>
+                              </div>
+
+                              <form onSubmit={handleFakeProcess} className="space-y-4">
+                                  <div>
+                                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">UTR / Reference No.</label>
+                                      <input 
+                                          required 
+                                          minLength={12} 
+                                          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-900 outline-none text-sm focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-400 font-mono" 
+                                          placeholder="e.g. 324589120934" 
+                                          value={form.txn} 
+                                          onChange={e=>setForm({...form, txn:e.target.value})} 
+                                      />
+                                  </div>
+                                  <button disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                                      {loading ? <Loader2 size={16} className="animate-spin"/> : <Lock size={16}/>} 
+                                      {loading ? 'Processing...' : 'Submit for Verification'}
+                                  </button>
+                              </form>
+                          </div>
+                      </div>
+                  </div>
+                ) : (
+                  <div className="p-8 md:p-10 text-center flex-1 flex flex-col justify-center bg-slate-900">
+                      <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                          <CheckCircle className="text-emerald-400 w-10 h-10"/>
+                      </div>
+                      <h3 className="text-2xl font-black text-white mb-4">Request Submitted!</h3>
+                      
+                      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6 max-w-xs mx-auto">
+                          <p className="text-slate-300 text-base font-medium leading-relaxed">
+                              Admin is verifying the payment.
+                          </p>
+                          <p className="text-emerald-400 font-bold text-lg mt-1 animate-pulse">
+                              Kindly wait for 5 min.
+                          </p>
+                      </div>
+
+                      <p className="text-slate-500 text-xs mb-2">Auto-closing in</p>
+                      <div className="text-3xl font-mono font-bold text-white mb-6">{autoCloseTimer}s</div>
+                      
+                      <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl text-sm font-bold transition-colors">Return to Lobby Now</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
