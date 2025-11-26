@@ -12,97 +12,99 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        /* --- CORE PERFORMANCE RESET --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #020617;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .font-tech { font-family: 'Rajdhani', sans-serif; }
 
-        /* --- Optimized Animations --- */
-        @keyframes gradient-shift { 
-            0% { background-position: 0% 50%; } 
-            50% { background-position: 100% 50%; } 
-            100% { background-position: 0% 50%; } 
-        }
-        /* Only use heavy grid flow on desktop */
-        @media (min-width: 768px) {
-            @keyframes grid-flow {
-                0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-                100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
-            }
-            .animate-grid-flow { animation: grid-flow 2s linear infinite; }
-        }
-        
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scroll-left { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        
-        /* Reduced motion classes */
-        .animate-gradient-shift { background-size: 200% 200%; animation: gradient-shift 8s ease infinite; } /* Slower for performance */
-        .animate-float { animation: float 4s ease-in-out infinite; }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
-        .animate-scroll-left { animation: scroll-left 30s linear infinite; will-change: transform; }
-
-        /* Simplified Glitch for Mobile */
-        .glitch-text { position: relative; }
-        @media (min-width: 768px) {
-             /* Keep complex glitch only on desktop */
-            @keyframes glitch-skew { 0%, 100% { transform: skew(0deg); } 20% { transform: skew(-2deg); } 40% { transform: skew(2deg); } }
-            .glitch-text { animation: glitch-skew 4s infinite linear alternate-reverse; }
-        }
-
-        /* Performance Optimized UI Elements */
+        /* --- MOBILE OPTIMIZATIONS --- */
         .glass-panel { 
-            background: rgba(2, 6, 23, 0.95); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-        }
-        
-        /* Mobile-First Card Styles (Less heavy effects) */
-        .glass-card { 
             background: #0f172a; 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border: 1px solid #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        .glass-card {
+            background: #111827;
+            border: 1px solid #334155;
             position: relative;
             overflow: hidden;
-            transform: translateZ(0); /* Hardware accelerate */
+            /* Hardware acceleration for smoothness */
+            transform: translateZ(0);
         }
+        
+        button { min-height: 44px; touch-action: manipulation; } 
 
-        /* Desktop Enhancements */
+        /* --- DESKTOP ENHANCEMENTS (MIN-WIDTH: 768PX) --- */
         @media (min-width: 768px) {
-            .glass-panel { background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+            .glass-panel { 
+                background: rgba(2, 6, 23, 0.85); 
+                backdrop-filter: blur(12px); 
+                -webkit-backdrop-filter: blur(12px); 
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
             .glass-card { 
                 background: linear-gradient(145deg, rgba(15, 23, 42, 0.6) 0%, rgba(2, 6, 23, 0.9) 100%);
                 backdrop-filter: blur(10px); 
-                transition: all 0.3s ease;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
             }
             .glass-card:hover { 
-                transform: translateY(-5px); 
+                transform: translateY(-4px); 
                 border-color: rgba(6, 182, 212, 0.4); 
-                box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+                box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); 
             }
+            
+            @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+            .animate-gradient-shift { background-size: 200% 200%; animation: gradient-shift 10s ease infinite; }
+            
+            @keyframes grid-flow { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px); } }
+            .animate-grid-flow { animation: grid-flow 3s linear infinite; }
+            
+            @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            .animate-float { animation: float 6s ease-in-out infinite; }
         }
 
-        .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
-        .neon-text-gold { text-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
+        /* --- SHARED LIGHTWEIGHT ANIMATIONS --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-fade-in-up { animation: slideUp 0.4s ease-out forwards; }
+
+        @keyframes scroll-left { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .animate-scroll-left { animation: scroll-left 25s linear infinite; will-change: transform; }
+        
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite; }
+
+        /* Utility */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(2, 6, 23, 0.5); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 10px; }
         
-        /* Prevent auto-zoom on inputs */
-        input, select, button { font-size: 16px !important; }
+        .neon-text { text-shadow: 0 0 5px rgba(6, 182, 212, 0.5); }
+        .neon-text-gold { text-shadow: 0 0 5px rgba(234, 179, 8, 0.5); }
         
-        /* Grid Background (Static on Mobile) */
+        /* Grid Background */
         .bg-cyber-grid {
             background-image: linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
             linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
             background-size: 40px 40px;
         }
+        
+        input, select, button, textarea { font-size: 16px !important; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 overflow-x-hidden">
+<body class="bg-slate-950 text-slate-200 overflow-x-hidden antialiased">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
@@ -112,9 +114,8 @@
         import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js';
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
         import { getFirestore, collection, addDoc, updateDoc, doc, setDoc, onSnapshot, serverTimestamp, arrayUnion, deleteDoc, increment, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
-        import { Trophy, Gamepad2, Users, Calendar, CheckCircle, Plus, Trash2, LogOut, Shield, User, X, Lock, Key, Edit3, Crosshair, Award, History, Zap, QrCode, AlertTriangle, Check, RefreshCcw, Flame, Timer, AlertOctagon, Menu, Info, Pause, PlayCircle, Wallet, CreditCard, Smartphone, ShieldCheck, Loader2, ChevronRight, Megaphone, ScrollText, List, Coins, Save, MinusCircle, Pencil, Instagram, Mail, LogIn, UserPlus, Bell, Send, Filter, MessageSquare, Share2, Star } from 'https://esm.sh/lucide-react@0.292.0';
+        import { Trophy, Gamepad2, Users, Calendar, CheckCircle, Plus, Trash2, LogOut, Shield, User, X, Lock, Key, Edit3, Crosshair, Award, History, Zap, QrCode, AlertTriangle, Check, RefreshCcw, Flame, Timer, AlertOctagon, Menu, Info, Pause, PlayCircle, Wallet, CreditCard, Smartphone, ShieldCheck, Loader2, ChevronRight, Megaphone, ScrollText, List, Coins, Save, MinusCircle, Pencil, Instagram, Mail, LogIn, UserPlus, Bell, Send, Filter, MessageSquare, Share2, Star, Settings } from 'https://esm.sh/lucide-react@0.292.0';
 
-        // --- CONFIG ---
         const firebaseConfig = {
           apiKey: "AIzaSyA6h78d692c8B86bY9VdStoHxw-RXgKfBE",
           authDomain: "rings-of-fire-2.firebaseapp.com",
@@ -146,7 +147,7 @@
             try {
                 const ref = getNotificationsCollection();
                 if(ref) await addDoc(ref, { target, title, message, type, createdAt: serverTimestamp(), readBy: [] });
-            } catch (e) { console.error("Failed to send notification", e); }
+            } catch (e) { console.error("Notification Error", e); }
         };
 
         const formatDate = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
@@ -156,13 +157,13 @@
         const CountdownTimer = ({ targetDate }) => {
           const calculate = () => {
             const diff = +new Date(targetDate) - +new Date();
-            if (diff > 0) return { d: Math.floor(diff / (86400000)), h: Math.floor((diff / 3600000) % 24), m: Math.floor((diff / 60000) % 60) };
+            if (diff > 0) return { d: Math.floor(diff / 86400000), h: Math.floor((diff / 3600000) % 24), m: Math.floor((diff / 60000) % 60) };
             return {};
           };
           const [timeLeft, setTimeLeft] = useState(calculate());
           useEffect(() => { const t = setInterval(() => setTimeLeft(calculate()), 1000); return () => clearInterval(t); }, [targetDate]);
           const pad = (n) => String(n).padStart(2, '0');
-          if (Object.keys(timeLeft).length === 0) return <span className="text-emerald-400 font-bold animate-pulse font-tech tracking-widest">LIVE</span>;
+          if (Object.keys(timeLeft).length === 0) return <span className="text-emerald-400 font-bold animate-pulse-soft tracking-widest">LIVE</span>;
           return <div className={`flex items-center gap-1 font-mono text-xs md:text-sm font-bold ${!timeLeft.d ? 'text-yellow-400' : 'text-cyan-400'}`}>{timeLeft.d > 0 && <span>{timeLeft.d}d</span>}<span>{pad(timeLeft.h)}h</span><span>{pad(timeLeft.m)}m</span></div>;
         };
 
@@ -175,11 +176,11 @@
         const NewsTicker = ({ newsItems }) => {
             const items = newsItems && newsItems.length ? newsItems : ["Welcome to Ring's of Fire! 🏆", "Register now! 🚀"];
             return (
-                <div className="bg-slate-950 border-b border-white/5 h-8 flex items-center overflow-hidden relative z-50">
-                    <div className="absolute left-0 z-10 bg-slate-950 px-2 h-full flex items-center text-cyan-500 font-bold text-xs font-mono border-r border-white/10"><Megaphone size={14} className="mr-2"/> NEWS</div>
+                <div className="bg-slate-900 border-b border-white/10 h-9 flex items-center overflow-hidden relative z-50">
+                    <div className="absolute left-0 z-10 bg-slate-900 px-3 h-full flex items-center text-cyan-500 font-bold text-xs font-mono border-r border-white/10 shadow-md"><Megaphone size={14} className="mr-2"/> NEWS</div>
                     <div className="whitespace-nowrap animate-scroll-left flex gap-12 items-center text-xs text-slate-300 font-medium w-full font-tech tracking-wide">
-                        {items.map((item, i) => <span key={i} className="flex items-center gap-2"><span className="w-1 h-1 bg-cyan-500 rounded-full inline-block"></span> {item}</span>)}
-                        {items.map((item, i) => <span key={`d-${i}`} className="flex items-center gap-2"><span className="w-1 h-1 bg-cyan-500 rounded-full inline-block"></span> {item}</span>)}
+                        {items.map((item, i) => <span key={i} className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-cyan-500 rounded-full inline-block"></span> {item}</span>)}
+                        {items.map((item, i) => <span key={`d-${i}`} className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-cyan-500 rounded-full inline-block"></span> {item}</span>)}
                     </div>
                 </div>
             );
@@ -189,7 +190,7 @@
             const [isOpen, setIsOpen] = useState(false);
             return (
                 <div className="relative z-50">
-                    <button onClick={() => setIsOpen(!isOpen)} className="relative p-2 text-slate-400 hover:text-white transition-colors"><Bell size={20}/>{notifications.length > 0 && (<span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-950"></span>)}</button>
+                    <button onClick={() => setIsOpen(!isOpen)} className="relative p-2.5 text-slate-400 hover:text-white transition-colors active:scale-95"><Bell size={20}/>{notifications.length > 0 && (<span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-950 animate-pulse-soft"></span>)}</button>
                     {isOpen && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
@@ -197,7 +198,7 @@
                                 <div className="p-3 border-b border-white/10 flex justify-between items-center bg-slate-950"><h4 className="font-bold text-white text-sm">NOTIFICATIONS</h4><span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full font-mono">{notifications.length} NEW</span></div>
                                 <div className="max-h-64 overflow-y-auto custom-scrollbar">
                                     {notifications.length === 0 ? (<div className="p-6 text-center text-slate-500 text-xs italic">No new alerts.</div>) : (notifications.map((n, i) => (
-                                        <div key={i} className={`p-3 border-b border-slate-800 hover:bg-slate-800/50 ${n.type === 'warning' ? 'border-l-2 border-l-yellow-500' : 'border-l-2 border-l-emerald-500'}`}><div className="flex justify-between items-start mb-1"><span className="font-bold text-white text-xs">{n.title}</span><span className="text-[9px] text-slate-500">{n.createdAt ? formatTime(n.createdAt.toDate()) : 'Now'}</span></div><p className="text-xs text-slate-400 leading-snug">{n.message}</p></div>
+                                        <div key={i} className={`p-3 border-b border-slate-800 ${n.type === 'warning' ? 'border-l-2 border-l-yellow-500' : 'border-l-2 border-l-emerald-500'}`}><div className="flex justify-between items-start mb-1"><span className="font-bold text-white text-xs">{n.title}</span><span className="text-[9px] text-slate-500">{n.createdAt ? formatTime(n.createdAt.toDate()) : 'Now'}</span></div><p className="text-xs text-slate-400 leading-snug">{n.message}</p></div>
                                     )))}
                                 </div>
                             </div>
@@ -205,100 +206,51 @@
                     )}
                 </div>
             );
-        };
+        }
 
         const ParticleBackground = () => {
-          // Significantly reduced particle count for mobile performance
-          const particles = useMemo(() => Array.from({ length: 10 }).map((_, i) => ({ 
-              id: i, 
-              left: Math.random() * 100 + '%', 
-              size: Math.random() * 3 + 1 + 'px', 
-              duration: Math.random() * 10 + 15 + 's', // Slower animation
-              delay: -(Math.random() * 20) + 's',
-              color: Math.random() > 0.5 ? '#06b6d4' : '#8b5cf6'
-          })), []);
-          
+          const particles = useMemo(() => Array.from({ length: 8 }).map((_, i) => ({ id: i, left: Math.random() * 100 + '%', top: Math.random() * 100 + '%', size: Math.random() * 2 + 1 + 'px', color: Math.random() > 0.5 ? '#06b6d4' : '#8b5cf6' })), []);
           return (
             <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-950">
-                {/* Simple Gradient Background - Performance Friendly */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#020617] to-[#111827]"></div>
-                
-                {/* Static Grid for Mobile, Animated for Desktop */}
-                <div className="absolute bottom-0 left-[-50%] right-[-50%] h-[40vh] bg-cyber-grid opacity-20 animate-grid-flow" style={{maskImage: 'linear-gradient(to top, black, transparent)'}}></div>
-
-                {/* Simplified Orbs */}
-                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-900/20 rounded-full blur-[80px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-violet-900/20 rounded-full blur-[80px]"></div>
-
-                {/* Minimal Particles */}
-                {particles.map(p => (
-                    <div key={p.id} className="absolute bottom-0 rounded-full opacity-60" 
-                         style={{ 
-                             left: p.left, 
-                             width: p.size, 
-                             height: p.size, 
-                             backgroundColor: p.color,
-                             animation: `rise ${p.duration} linear infinite`, 
-                             animationDelay: p.delay 
-                         }} 
-                    />
-                ))}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#020617] to-[#1e293b]"></div>
+                <div className="absolute bottom-0 left-[-50%] right-[-50%] h-[30vh] bg-cyber-grid opacity-20 md:animate-grid-flow" style={{maskImage: 'linear-gradient(to top, black, transparent)'}}></div>
+                {particles.map(p => ( <div key={p.id} className="absolute rounded-full opacity-40" style={{ left: p.left, top: p.top, width: p.size, height: p.size, backgroundColor: p.color }} /> ))}
             </div>
           );
         };
 
-        function PlayerAuthModal({ onClose, onLogin, showNotification }) {
+        function PlayerAuthModal({ onClose, onLogin }) {
           const [isSignUp, setIsSignUp] = useState(false);
           const [email, setEmail] = useState('');
           const [password, setPassword] = useState('');
           const [loading, setLoading] = useState(false);
           const [error, setError] = useState('');
-          const [welcomeSequence, setWelcomeSequence] = useState(false);
+          const [welcome, setWelcome] = useState(false);
 
           const handleAuth = async (e) => {
             e.preventDefault(); setLoading(true); setError('');
             try {
-                if (isSignUp) { await createUserWithEmailAndPassword(auth, email, password); } 
-                else { await signInWithEmailAndPassword(auth, email, password); }
-                
-                setLoading(false);
-                setWelcomeSequence(true);
-                setTimeout(() => {
-                    onLogin();
-                }, 2000); // Faster transition
-
-            } catch (err) { 
-                setError(err.message); 
-                setLoading(false);
-            } 
+                if (isSignUp) await createUserWithEmailAndPassword(auth, email, password);
+                else await signInWithEmailAndPassword(auth, email, password);
+                setLoading(false); setWelcome(true);
+                setTimeout(() => onLogin(), 1500);
+            } catch (err) { setError(err.message); setLoading(false); } 
           };
 
-          if (welcomeSequence) {
-              return (
-                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950 animate-fade-in">
-                    <div className="text-center p-6">
-                        <Gamepad2 size={60} className="text-cyan-400 mx-auto mb-4 animate-bounce" />
-                        <h2 className="text-3xl font-black text-white font-tech tracking-tighter mb-2">ACCESS GRANTED</h2>
-                        <p className="text-cyan-500 font-mono text-xs animate-pulse">LOADING SYSTEM...</p>
-                    </div>
-                </div>
-              );
-          }
+          if (welcome) return <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950 animate-fade-in"><div className="text-center p-6"><Gamepad2 size={60} className="text-cyan-400 mx-auto mb-4 animate-bounce" /><h2 className="text-3xl font-black text-white font-tech tracking-tighter mb-2">ACCESS GRANTED</h2></div></div>;
 
           return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in">
-              <div className="glass-panel p-6 rounded-2xl w-full max-w-sm border border-white/10">
-                <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button>
-                <div className="text-center mb-6"><h3 className="text-lg font-bold text-white font-tech uppercase">Player Access</h3></div>
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-sm animate-fade-in">
+              <div className="glass-panel p-6 rounded-2xl w-full max-w-sm border border-white/10 shadow-2xl">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"><X size={20}/></button>
+                <div className="text-center mb-6"><h3 className="text-xl font-bold text-white font-tech uppercase tracking-wide">Player Access</h3></div>
                 <form onSubmit={handleAuth} className="space-y-4">
-                  <input type="email" placeholder="Email" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none" value={email} onChange={e => setEmail(e.target.value)} required />
-                  <input type="password" placeholder="Password" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none" value={password} onChange={e => setPassword(e.target.value)} required />
+                  <input type="email" placeholder="Email" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white text-sm focus:border-cyan-500 outline-none" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <input type="password" placeholder="Password" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white text-sm focus:border-cyan-500 outline-none" value={password} onChange={e => setPassword(e.target.value)} required />
                   {error && <div className="text-red-400 text-xs text-center font-bold">{error}</div>}
-                  <button disabled={loading} type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl text-sm transition-colors">
-                      {loading ? <Loader2 size={18} className="animate-spin mx-auto"/> : (isSignUp ? 'Create Account' : 'Login')}
-                  </button>
+                  <button disabled={loading} type="submit" className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-4 rounded-xl text-sm shadow-lg active:scale-95 transition-transform">{loading ? <Loader2 size={18} className="animate-spin mx-auto"/> : (isSignUp ? 'Create Account' : 'Login')}</button>
                 </form>
-                <div className="mt-4 text-center"><button onClick={() => setIsSignUp(!isSignUp)} className="text-xs text-slate-400 hover:text-cyan-400 transition-colors">{isSignUp ? "Have account? Login" : "New? Create Account"}</button></div>
+                <div className="mt-6 text-center"><button onClick={() => setIsSignUp(!isSignUp)} className="text-xs text-slate-400 hover:text-cyan-400 p-2">{isSignUp ? "Have account? Login" : "New here? Create Account"}</button></div>
               </div>
             </div>
           );
@@ -315,15 +267,15 @@
               } else { setError('Access Denied'); } 
           };
           return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-sm animate-fade-in">
               <div className="glass-panel p-6 rounded-2xl w-full max-w-sm border border-white/10">
-                <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button>
-                <h3 className="text-lg font-bold text-white font-tech uppercase text-center mb-6">Organizer Access</h3>
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"><X size={20}/></button>
+                <h3 className="text-xl font-bold text-white font-tech uppercase text-center mb-6">Organizer Access</h3>
                 <form onSubmit={handleLogin} className="space-y-4">
-                  <input type="text" placeholder="ID" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm" value={creds.id} onChange={e => setCreds({...creds, id: e.target.value})} />
-                  <input type="password" placeholder="Passcode" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm" value={creds.password} onChange={e => setCreds({...creds, password: e.target.value})} />
+                  <input type="text" placeholder="ID" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white text-sm" value={creds.id} onChange={e => setCreds({...creds, id: e.target.value})} />
+                  <input type="password" placeholder="Passcode" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white text-sm" value={creds.password} onChange={e => setCreds({...creds, password: e.target.value})} />
                   {error && <div className="text-red-400 text-xs text-center">{error}</div>}
-                  <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl text-sm">Authenticate</button>
+                  <button type="submit" className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-4 rounded-xl text-sm active:scale-95 transition-transform">Authenticate</button>
                 </form>
               </div>
             </div>
@@ -362,37 +314,37 @@
           };
           
           if (!userId) return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-sm animate-fade-in">
               <div className="glass-panel rounded-3xl w-full max-w-md p-8 text-center border border-white/10">
-                  <button onClick={onClose} className="absolute top-4 right-4 text-slate-400"><X size={24}/></button>
+                  <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 p-2"><X size={24}/></button>
                   <h3 className="text-2xl font-black text-white mb-2">Login Required</h3>
-                  <button onClick={onLoginRequest} className="w-full bg-cyan-600 text-white font-bold py-3.5 rounded-xl mb-3 mt-4">Login / Sign Up</button>
+                  <button onClick={onLoginRequest} className="w-full bg-cyan-600 text-white font-bold py-4 rounded-xl mb-3 mt-4 active:scale-95 transition-transform">Login / Sign Up</button>
               </div>
             </div>
           );
 
           return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-sm animate-fade-in">
               <div className="glass-panel rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl overflow-hidden relative h-[85vh] max-h-[800px] flex flex-col">
-                {step !== 3 && <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 z-10 p-2"><X size={24}/></button>}
+                {step !== 3 && <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 z-10 p-2 bg-slate-900/50 rounded-full"><X size={24}/></button>}
                 {step === 1 ? (
                   <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                       <h3 className="text-xl font-bold text-white mb-6">Registration</h3>
-                      <form onSubmit={e => { e.preventDefault(); if (Number(tournament.entryFee) === 0) { handleJoin(e, true); } else { setStep(2); } }} className="space-y-4">
-                        <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-sm" placeholder="Your Name" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} />
-                        <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-sm" placeholder="In-Game Name" value={form.ign} onChange={e=>setForm({...form, ign:e.target.value})} />
-                        {req > 1 && form.team.map((t,i)=><input key={i} required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-sm" placeholder={`Teammate ${i+1}`} value={t} onChange={ev=>{const n=[...form.team]; n[i]=ev.target.value; setForm({...form, team:n})}} />)}
-                        <div className="pt-4 border-t border-slate-800"><h4 className="text-sm font-bold text-cyan-400 mb-2">Payout Info</h4><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-sm mb-2" placeholder="UPI ID" value={form.upiId} onChange={e=>setForm({...form, upiId:e.target.value})} /><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-sm" placeholder="Reg. Name" value={form.upiName} onChange={e=>setForm({...form, upiName:e.target.value})} /></div>
-                        <button disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl mt-2 text-sm">{loading ? 'Loading...' : 'Next'}</button>
+                      <form onSubmit={e => { e.preventDefault(); if (Number(tournament.entryFee) === 0) { handleJoin(e, true); } else { setStep(2); } }} className="space-y-4 pb-20">
+                        <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3.5 text-white text-sm" placeholder="Your Name" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} />
+                        <input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3.5 text-white text-sm" placeholder="In-Game Name" value={form.ign} onChange={e=>setForm({...form, ign:e.target.value})} />
+                        {req > 1 && form.team.map((t,i)=><input key={i} required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3.5 text-white text-sm" placeholder={`Teammate ${i+1}`} value={t} onChange={ev=>{const n=[...form.team]; n[i]=ev.target.value; setForm({...form, team:n})}} />)}
+                        <div className="pt-4 border-t border-slate-800"><h4 className="text-sm font-bold text-cyan-400 mb-3">Payout Info</h4><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3.5 text-white text-sm mb-3" placeholder="UPI ID" value={form.upiId} onChange={e=>setForm({...form, upiId:e.target.value})} /><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3.5 text-white text-sm" placeholder="Reg. Name" value={form.upiName} onChange={e=>setForm({...form, upiName:e.target.value})} /></div>
+                        <button disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl mt-4 text-sm active:scale-95 transition-transform shadow-lg">{loading ? 'Loading...' : 'Next Step'}</button>
                       </form>
                   </div>
                 ) : step === 2 ? (
                   <div className="flex-1 flex flex-col">
                       <div className="bg-white p-4 flex justify-between items-center border-b"><span className="text-slate-800 font-bold">Pay ₹{tournament.entryFee}</span><PaymentTimer initialSeconds={300} onExpire={onClose}/></div>
-                      <div className="p-6 overflow-y-auto bg-slate-50 flex-1">
-                          <div className="mb-4"><a href={`upi://pay?pa=7042368784@pthdfc&pn=Fardeen&am=${tournament.entryFee}`} className="block bg-blue-600 text-white p-3.5 rounded-xl text-center font-bold shadow-lg">Pay via UPI App</a></div>
-                          <div className="bg-white p-4 rounded-xl border mb-4 text-center"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=7042368784@pthdfc&pn=Fardeen&am=${tournament.entryFee}`)}`} className="mx-auto w-32 h-32"/></div>
-                          <form onSubmit={(e) => handleJoin(e, false)}><input required className="w-full border p-3.5 rounded-xl mb-2 text-black" placeholder="UTR / Ref No." value={form.txn} onChange={e=>setForm({...form, txn:e.target.value})} /><button disabled={loading} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg">{loading ? 'Verifying...' : 'Submit Payment'}</button></form>
+                      <div className="p-6 overflow-y-auto bg-slate-50 flex-1 pb-20">
+                          <div className="mb-4"><a href={`upi://pay?pa=7042368784@pthdfc&pn=Fardeen&am=${tournament.entryFee}`} className="block bg-blue-600 text-white p-3.5 rounded-xl text-center font-bold shadow-lg active:scale-95 transition-transform">Pay via UPI App</a></div>
+                          <div className="bg-white p-4 rounded-xl border mb-4 text-center shadow-sm"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=7042368784@pthdfc&pn=Fardeen&am=${tournament.entryFee}`)}`} className="mx-auto w-32 h-32"/></div>
+                          <form onSubmit={(e) => handleJoin(e, false)}><input required className="w-full border p-3.5 rounded-xl mb-3 text-black" placeholder="UTR / Ref No." value={form.txn} onChange={e=>setForm({...form, txn:e.target.value})} /><button disabled={loading} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform">{loading ? 'Verifying...' : 'Submit Payment'}</button></form>
                       </div>
                   </div>
                 ) : (
@@ -400,7 +352,7 @@
                       <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle size={32} className="text-emerald-400"/></div>
                       <h3 className="text-2xl font-bold text-white mb-2">Submitted!</h3>
                       <p className="text-slate-400 mb-6">Admin is verifying.</p>
-                      <button onClick={onClose} className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold">Close ({autoCloseTimer}s)</button>
+                      <button onClick={onClose} className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold active:scale-95 transition-transform">Close ({autoCloseTimer}s)</button>
                   </div>
                 )}
               </div>
@@ -422,7 +374,7 @@
           };
 
           return (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-700 max-w-3xl mx-auto">
+            <div className="glass-panel p-6 rounded-2xl border border-white/10 max-w-3xl mx-auto">
               <h3 className="text-xl font-bold text-white mb-6">New Tournament</h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
@@ -434,7 +386,7 @@
                 <div className="grid grid-cols-2 gap-3"><input type="date" className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm" value={form.date} onChange={e => setForm({...form, date: e.target.value})} /><input type="time" className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm" value={form.time} onChange={e => setForm({...form, time: e.target.value})} /></div>
                 <div className="grid grid-cols-3 gap-3"><input type="number" className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm" placeholder="Fee" value={form.entryFee} onChange={e => setForm({...form, entryFee: e.target.value})} /><input type="number" className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm" placeholder="Prize" value={form.prizePool} onChange={e => setForm({...form, prizePool: e.target.value})} /><input type="number" className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm" placeholder="Slots" value={form.totalSlots} onChange={e => setForm({...form, totalSlots: e.target.value})} /></div>
                 <textarea className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm h-24" value={form.rules} onChange={e => setForm({...form, rules: e.target.value})} />
-                <button disabled={loading} className="w-full bg-cyan-600 text-white font-bold py-4 rounded-xl shadow-lg">{loading ? 'Launching...' : 'Launch'}</button>
+                <button disabled={loading} className="w-full bg-cyan-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform">{loading ? 'Launching...' : 'Launch'}</button>
               </form>
             </div>
           );
@@ -454,7 +406,7 @@
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in">
                   <div className="glass-panel p-6 rounded-2xl w-full max-w-lg relative border border-slate-700">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button><h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Megaphone size={20} className="text-yellow-400"/> Edit News Ticker</h3>
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white p-2"><X size={20}/></button><h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Megaphone size={20} className="text-yellow-400"/> Edit News Ticker</h3>
                     <div className="space-y-3 mb-6"><form onSubmit={addItem} className="flex gap-2"><input className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-cyan-500" placeholder="Type new announcement..." value={newItem} onChange={e=>setNewItem(e.target.value)}/><button className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded-lg"><Plus size={20}/></button></form><div className="max-h-60 overflow-y-auto custom-scrollbar space-y-2 bg-slate-900/50 p-2 rounded-lg">{items.length === 0 && <div className="text-slate-500 text-xs text-center py-4">No news items.</div>}{items.map((item, i) => (<div key={i} className="flex justify-between items-center bg-slate-800 p-2 rounded border border-slate-700"><span className="text-sm text-slate-200">{item}</span><button onClick={()=>removeItem(i)} className="text-red-400 hover:text-red-300 p-1"><MinusCircle size={16}/></button></div>))}</div></div>
                     <button onClick={saveNews} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm flex justify-center items-center gap-2"><Save size={16}/> Save Changes</button>
                   </div>
@@ -470,7 +422,7 @@
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in">
                   <div className="glass-panel p-6 rounded-2xl w-full max-w-lg relative border border-slate-700">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X size={20}/></button><h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Bell size={20} className="text-cyan-400"/> Send Broadcast</h3><p className="text-xs text-slate-400 mb-4">This message will be sent to ALL registered users instantly.</p>
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"><X size={20}/></button><h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Bell size={20} className="text-cyan-400"/> Send Broadcast</h3><p className="text-xs text-slate-400 mb-4">This message will be sent to ALL registered users instantly.</p>
                     <form onSubmit={handleSend} className="space-y-4"><input required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-cyan-500" placeholder="Title (e.g. Server Maintenance)" value={title} onChange={e=>setTitle(e.target.value)}/><textarea required className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-cyan-500 h-24 resize-none" placeholder="Message body..." value={msg} onChange={e=>setMsg(e.target.value)}/><button disabled={sending} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl text-sm flex justify-center items-center gap-2">{sending ? 'Sending...' : 'Send Broadcast'}</button></form>
                   </div>
                 </div>
@@ -480,6 +432,8 @@
         function AdminTournamentCard({ data, showNotification }) {
           const [expanded, setExpanded] = useState(false);
           const [editing, setEditing] = useState(false);
+          const [isEditingDetails, setIsEditingDetails] = useState(false);
+          const [editForm, setEditForm] = useState({});
           const [room, setRoom] = useState({ id: data.roomId || '', pass: data.roomPassword || '' });
           const [winnerModal, setWinnerModal] = useState(false);
           const [winnerName, setWinnerName] = useState('');
@@ -490,27 +444,81 @@
           const declareWinner = async () => { const docRef = getTournamentDoc(data.id); await updateDoc(docRef, { status: 'completed', winner: winnerName }); setWinnerModal(false); showNotification("Closed"); };
           const deleteT = async () => { if(confirm("Delete?")) await deleteDoc(getTournamentDoc(data.id)); };
           const sharePromo = () => { const msg = `🔥 *TOURNAMENT ALERT!* 🔥\n\n🏆 *${data.title}*\n🎮 *Game:* ${data.game} (${data.format})\n💰 *Prize Pool:* ₹${data.prizePool}\n🎟️ *Entry:* ${data.entryFee === 0 ? "FREE" : "₹"+data.entryFee}\n📅 *When:* ${formatDate(data.dateTime)} at ${formatTime(data.dateTime)}\n\n👇 *CLICK TO JOIN:* 👇\nhttps://koindro.com/?tournament_id=${data.id}\n\n🚀 *Register Now & Prove Your Skill!*`; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); };
+          
+          const startEditingDetails = () => {
+            const dateObj = new Date(data.dateTime);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            const timeStr = dateObj.toTimeString().slice(0, 5);
+            setEditForm({ title: data.title, game: data.game, map: data.map, entryFee: data.entryFee, prizePool: data.prizePool, totalSlots: data.totalSlots, rules: data.rules || "Rules", announcement: data.announcement || '', date: dateStr, time: timeStr });
+            setIsEditingDetails(true);
+          };
+          const handleSaveDetails = async (e) => {
+              e.preventDefault();
+              try {
+                  const dateTime = new Date(`${editForm.date}T${editForm.time}`);
+                  if (isNaN(dateTime.getTime())) throw new Error("Invalid Date/Time");
+                  const docRef = getTournamentDoc(data.id);
+                  await updateDoc(docRef, { title: editForm.title, game: editForm.game, map: editForm.map, entryFee: Number(editForm.entryFee), prizePool: Number(editForm.prizePool), totalSlots: Number(editForm.totalSlots), rules: editForm.rules, announcement: editForm.announcement, dateTime: dateTime.toISOString() });
+                  setIsEditingDetails(false); showNotification("Tournament Updated Successfully");
+              } catch(e) { console.error(e); alert(e.message); }
+          };
+
+          if (isEditingDetails) {
+             return (
+                 <div className="glass-card rounded-2xl p-6 bg-slate-900/90 border border-blue-500/30">
+                     <h4 className="text-white font-bold mb-4 flex items-center gap-2"><Pencil size={16} /> Edit Tournament</h4>
+                     <form onSubmit={handleSaveDetails} className="space-y-4">
+                        <input className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.title} onChange={e=>setEditForm({...editForm, title:e.target.value})} placeholder="Title" required/>
+                        <div className="grid grid-cols-2 gap-2"><input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.date} onChange={e=>setEditForm({...editForm, date:e.target.value})} type="date" required/><input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.time} onChange={e=>setEditForm({...editForm, time:e.target.value})} type="time" required/></div>
+                        <div className="grid grid-cols-3 gap-2"><input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.entryFee} onChange={e=>setEditForm({...editForm, entryFee:e.target.value})} type="number" placeholder="Fee" required/><input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.prizePool} onChange={e=>setEditForm({...editForm, prizePool:e.target.value})} type="number" placeholder="Prize" required/><input className="bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.totalSlots} onChange={e=>setEditForm({...editForm, totalSlots:e.target.value})} type="number" placeholder="Slots" required/></div>
+                        <input className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.map} onChange={e=>setEditForm({...editForm, map:e.target.value})} placeholder="Map" required/>
+                        <textarea className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm h-24 resize-none custom-scrollbar" value={editForm.rules} onChange={e=>setEditForm({...editForm, rules:e.target.value})} placeholder="Rules" />
+                        <div><label className="block text-slate-400 text-xs font-bold mb-1">Match Notice (Visible to Players)</label><input className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm" value={editForm.announcement} onChange={e=>setEditForm({...editForm, announcement:e.target.value})} placeholder="e.g. Room ID delayed by 10 mins" /></div>
+                        <div className="flex gap-2 justify-end pt-2"><button type="button" onClick={()=>setIsEditingDetails(false)} className="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancel</button><button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded font-bold hover:bg-blue-500">Save Changes</button></div>
+                     </form>
+                 </div>
+             );
+          }
 
           return (
             <div className={`glass-card rounded-2xl overflow-hidden ${data.status === 'completed' ? 'opacity-60' : ''}`}>
               <div className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div className="flex-1">
                   <div className="flex gap-2 mb-2"><span className="bg-emerald-900 text-emerald-400 text-[10px] px-2 py-1 rounded font-bold">{data.game}</span><span className="bg-blue-900 text-blue-400 text-[10px] px-2 py-1 rounded font-bold">{data.format}</span></div>
-                  <h3 className="font-bold text-white text-lg">{data.title}</h3>
+                  <h3 className="font-bold text-white text-lg flex items-center gap-2">{data.title}<button onClick={startEditingDetails} className="text-slate-500 hover:text-white"><Pencil size={14}/></button></h3>
                   <div className="text-xs text-slate-400 mt-1 flex gap-4 font-mono"><span>{formatDate(data.dateTime)} {formatTime(data.dateTime)}</span><span>{data.participants?.length}/{data.totalSlots} Filled</span></div>
                   {data.winner && <div className="mt-2 text-yellow-400 text-xs font-bold">Winner: {data.winner}</div>}
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={sharePromo} className="p-2 bg-blue-900/50 text-blue-400 rounded hover:bg-blue-900"><Share2 size={18}/></button>
-                    <button onClick={() => setWinnerModal(true)} className="p-2 bg-yellow-900/50 text-yellow-400 rounded hover:bg-yellow-900"><Award size={18}/></button>
-                    <button onClick={() => setExpanded(!expanded)} className="p-2 bg-slate-800 text-slate-400 rounded hover:bg-slate-700"><Users size={18}/></button>
-                    <button onClick={deleteT} className="p-2 bg-red-900/50 text-red-400 rounded hover:bg-red-900"><Trash2 size={18}/></button>
+                
+                {/* Optimized Grid Layout for Mobile Buttons */}
+                <div className="grid grid-cols-4 gap-2 w-full md:w-auto mt-2 md:mt-0">
+                    <button onClick={sharePromo} className="p-3 md:p-2 bg-blue-900/50 text-blue-400 rounded hover:bg-blue-900 flex items-center justify-center"><Share2 size={18}/></button>
+                    <button onClick={() => setWinnerModal(true)} className="p-3 md:p-2 bg-yellow-900/50 text-yellow-400 rounded hover:bg-yellow-900 flex items-center justify-center"><Award size={18}/></button>
+                    <button onClick={() => setExpanded(!expanded)} className="p-3 md:p-2 bg-slate-800 text-slate-400 rounded hover:bg-slate-700 flex items-center justify-center"><Settings size={18}/></button>
+                    <button onClick={deleteT} className="p-3 md:p-2 bg-red-900/50 text-red-400 rounded hover:bg-red-900 flex items-center justify-center"><Trash2 size={18}/></button>
                 </div>
               </div>
+              
               {expanded && (
                 <div className="bg-slate-950/80 p-4 border-t border-white/10">
-                    <div className="flex justify-between mb-3"><h4 className="text-xs font-bold text-white uppercase tracking-wider">Room Info</h4><button onClick={() => setEditing(!editing)} className="text-cyan-400"><Edit3 size={14}/></button></div>
-                    {editing ? <form onSubmit={updateRoom} className="flex gap-2 mb-4"><input className="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white w-24" placeholder="ID" value={room.id} onChange={e=>setRoom({...room, id:e.target.value})}/><input className="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white w-24" placeholder="Pass" value={room.pass} onChange={e=>setRoom({...room, pass:e.target.value})}/><button className="bg-emerald-600 text-white px-3 rounded text-xs font-bold">Save</button></form> : <div className="text-xs text-slate-400 mb-4 font-mono bg-slate-900 p-2 rounded border border-white/5 inline-block">ID: {data.roomId || '--'} | Pass: {data.roomPassword || '--'}</div>}
+                    {/* Explicit "Manage" Section for Room Edit */}
+                    <div className="flex justify-between mb-3 items-center">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Room Configuration</h4>
+                        <button onClick={() => setEditing(!editing)} className="text-cyan-400 bg-cyan-900/20 px-3 py-2 rounded text-xs font-bold border border-cyan-500/30 flex items-center gap-1 active:scale-95 transition-transform"><Edit3 size={14}/> {editing ? 'Cancel' : 'Edit Room'}</button>
+                    </div>
+                    
+                    {editing ? 
+                        <form onSubmit={updateRoom} className="flex flex-col md:flex-row gap-2 mb-6 bg-slate-900 p-3 rounded-lg border border-white/5">
+                            <input className="bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white w-full" placeholder="Room ID" value={room.id} onChange={e=>setRoom({...room, id:e.target.value})}/>
+                            <input className="bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white w-full" placeholder="Password" value={room.pass} onChange={e=>setRoom({...room, pass:e.target.value})}/>
+                            <button className="bg-emerald-600 text-white px-3 rounded text-xs font-bold">Save</button>
+                        </form> 
+                    : 
+                        <div className="text-xs text-slate-400 mb-6 font-mono bg-slate-900 p-3 rounded border border-white/5 flex flex-col md:flex-row justify-between gap-2">
+                            <span className="break-all">ID: <span className="text-white select-all">{data.roomId || '--'}</span></span>
+                            <span className="break-all">PASS: <span className="text-white select-all">{data.roomPassword || '--'}</span></span>
+                        </div>
+                    }
                     
                     <h4 className="text-xs font-bold text-white mb-2 uppercase tracking-wider">Player List ({data.participants?.length || 0})</h4>
                     <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
@@ -522,14 +530,14 @@
                                         <div className="text-[10px] text-slate-500 font-mono">Real Name: {p.name}</div>
                                     </div>
                                      <div className="flex gap-2">
-                                        {!p.paymentVerified && <button onClick={()=>verifyUser(p.userId)} className="text-emerald-400 bg-emerald-500/10 p-1.5 rounded hover:bg-emerald-500/20 transition-colors" title="Verify"><Check size={16}/></button>}
-                                        <button onClick={()=>removeUser(p.userId)} className="text-red-400 bg-red-500/10 p-1.5 rounded hover:bg-red-500/20 transition-colors" title="Kick"><Trash2 size={16}/></button>
+                                        {!p.paymentVerified && <button onClick={()=>verifyUser(p.userId)} className="text-emerald-400 bg-emerald-500/10 p-2 rounded hover:bg-emerald-500/20 transition-colors" title="Verify Payment"><Check size={16}/></button>}
+                                        <button onClick={()=>removeUser(p.userId)} className="text-red-400 bg-red-500/10 p-2 rounded hover:bg-red-500/20 transition-colors" title="Remove Player"><Trash2 size={16}/></button>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
-                                    <div><span className="text-slate-600 block font-bold uppercase tracking-wider">UPI ID</span><span className="text-cyan-400 select-all font-mono">{p.upiId || 'N/A'}</span></div>
-                                    <div><span className="text-slate-600 block font-bold uppercase tracking-wider">Reg. Name</span><span className="text-cyan-400 select-all">{p.upiName || 'N/A'}</span></div>
-                                    <div className="col-span-2 bg-black/30 p-1.5 rounded"><span className="text-slate-600 block font-bold uppercase tracking-wider mb-0.5">Transaction ID</span><span className="text-yellow-500 font-mono select-all text-xs">{p.paymentId}</span></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
+                                    <div><span className="text-slate-600 block font-bold uppercase tracking-wider">UPI ID</span><span className="text-cyan-400 select-all font-mono break-all">{p.upiId || 'N/A'}</span></div>
+                                    <div><span className="text-slate-600 block font-bold uppercase tracking-wider">Reg. Name</span><span className="text-cyan-400 select-all break-all">{p.upiName || 'N/A'}</span></div>
+                                    <div className="md:col-span-2 bg-black/30 p-2 rounded"><span className="text-slate-600 block font-bold uppercase tracking-wider mb-0.5">Transaction ID</span><span className="text-yellow-500 font-mono select-all text-xs break-all">{p.paymentId}</span></div>
                                 </div>
                             </div>
                         ))}
@@ -538,7 +546,7 @@
               )}
               {winnerModal && (
                   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-                      <div className="bg-slate-900 p-6 rounded-xl w-72 border border-slate-700 shadow-2xl">
+                      <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm border border-slate-700 shadow-2xl">
                           <h4 className="text-white font-bold mb-4 text-lg">Declare Winner</h4>
                           <input className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm mb-4 outline-none focus:border-yellow-500" placeholder="Winner Name / Team" value={winnerName} onChange={e=>setWinnerName(e.target.value)} />
                           <button onClick={declareWinner} className="w-full bg-yellow-600 hover:bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg text-sm mb-2 transition-colors">Confirm & Close</button>
@@ -577,13 +585,19 @@
             const sharePromo = () => { const msg = `🔥 *TOURNAMENT ALERT!* 🔥\n\n🏆 *${t.title}*\n🎮 *Game:* ${t.game} (${t.format})\n💰 *Prize Pool:* ₹${t.prizePool}\n🎟️ *Entry:* ${t.entryFee === 0 ? "FREE" : "₹"+t.entryFee}\n📅 *When:* ${formatDate(t.dateTime)} at ${formatTime(t.dateTime)}\n\n👇 *CLICK TO JOIN:* 👇\nhttps://koindro.com/?tournament_id=${t.id}\n\n🚀 *Register Now & Prove Your Skill!*`; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); };
 
             return (
-                <div className={`glass-card rounded-2xl overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 ${didWin ? 'border-yellow-500 shadow-[0_0_30px_rgba(234,179,8,0.3)]' : !isPast ? 'border-white/5 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(234,88,12,0.2)] animate-fire-pulse' : 'border-white/5 opacity-75 hover:opacity-100'}`}>
+                <div className={`glass-card rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ${didWin ? 'border-yellow-500 shadow-lg' : !isPast ? 'border-white/5' : 'border-white/5 opacity-75'}`}>
                     <div className={`h-36 p-5 relative flex flex-col justify-end ${didWin ? 'bg-gradient-to-t from-yellow-900/40 to-slate-900' : isPast ? 'bg-slate-900/50' : 'bg-gradient-to-br from-orange-900/40 to-red-900/20'}`}>
-                        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
-                        <div className="flex justify-between relative z-10 mb-auto"><span className="bg-slate-950/50 border border-white/10 text-[10px] font-bold px-2 py-1 rounded text-white uppercase tracking-wider backdrop-blur-md">{t.game}</span><div className="flex items-center gap-2"><button onClick={sharePromo} className="text-white/80 hover:text-white transition-colors"><Share2 size={16}/></button><span className="text-yellow-400 font-black text-base flex items-center gap-1 drop-shadow-md"><Trophy size={16}/> ₹{t.prizePool}</span></div></div>
+                        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                        <div className="flex justify-between relative z-10 mb-auto">
+                            <span className="bg-slate-950/50 border border-white/10 text-[10px] font-bold px-2 py-1 rounded text-white uppercase tracking-wider backdrop-blur-md">{t.game}</span>
+                            <div className="flex items-center gap-2">
+                                <button onClick={sharePromo} className="text-white/80 hover:text-white transition-colors p-1 bg-white/10 rounded-full"><Share2 size={14}/></button>
+                                <span className="text-yellow-400 font-black text-base flex items-center gap-1 drop-shadow-md"><Trophy size={16}/> ₹{t.prizePool}</span>
+                            </div>
+                        </div>
                         <h3 className="text-xl font-black text-white mt-2 truncate font-tech tracking-wide uppercase drop-shadow-lg">{t.title}</h3>
-                        {!isPast && <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-red-600 shadow-[0_0_10px_rgba(249,115,22,0.8)]"></div>}
-                        {didWin && <div className="absolute top-4 right-4 text-yellow-400 animate-bounce drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]"><Trophy size={28}/></div>}
+                        {!isPast && <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-red-600"></div>}
+                        {didWin && <div className="absolute top-4 right-4 text-yellow-400 animate-bounce drop-shadow-md"><Trophy size={28}/></div>}
                     </div>
                     <div className="flex border-b border-white/5 bg-slate-900/40 backdrop-blur-md">
                         {['overview', 'players', 'prizes', 'rules'].map(tab => (
@@ -591,10 +605,8 @@
                         ))}
                     </div>
                     <div className="p-5 flex-1 flex flex-col gap-4 text-xs text-slate-300 bg-slate-900/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-slate-950/80"></div>
-                        <div className="relative z-10 key={activeTab} animate-tab-enter">
                         {activeTab === 'overview' && (
-                            <div className="space-y-5">
+                            <div className="space-y-5 animate-fade-in">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-slate-950/60 border border-white/5 p-2.5 rounded-lg flex items-center gap-2 text-slate-300"><Calendar size={14} className="text-cyan-400"/> <div>{formatDate(t.dateTime)}<div className="text-[10px] text-slate-500">{formatTime(t.dateTime)}</div></div></div>
                                     <div className="bg-slate-950/60 border border-white/5 p-2.5 rounded-lg flex items-center justify-center">{isPast ? <span className="text-yellow-500 font-bold tracking-wider">COMPLETED</span> : <CountdownTimer targetDate={t.dateTime}/>}</div>
@@ -605,7 +617,7 @@
                                 </div>
                                 {joined && !isPast && (
                                     <div className={`border rounded-lg p-3 relative overflow-hidden ${verified ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
-                                        {!verified ? <div className="text-yellow-400 font-bold flex gap-2 items-center justify-center animate-pulse"><AlertTriangle size={16}/> VERIFICATION PENDING</div> : 
+                                        {!verified ? <div className="text-yellow-400 font-bold flex gap-2 items-center justify-center animate-pulse-soft"><AlertTriangle size={16}/> VERIFICATION PENDING</div> : 
                                          roomLocked ? <div className="text-center text-slate-400 flex flex-col items-center gap-1"><Lock size={20} className="text-cyan-400 mb-1"/> <span className="text-[10px] uppercase tracking-wider">Room Locked</span></div> : 
                                          <div className="space-y-2">
                                              <div className="flex justify-between items-center border-b border-white/10 pb-1"><span className="text-[10px] uppercase text-slate-500 font-bold">Room ID</span><span className="text-white font-mono bg-slate-950 px-2 py-0.5 rounded select-all">{t.roomId}</span></div>
@@ -615,23 +627,22 @@
                                 )}
                             </div>
                         )}
-                        {activeTab === 'players' && <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">{t.participants?.length ? t.participants.map((p,i)=><div key={i} className="flex justify-between items-center bg-slate-950/40 border border-white/5 p-2.5 rounded-lg hover:bg-slate-800/50 transition-colors"><span className="font-bold text-slate-200 text-xs flex items-center gap-2"><span className="w-5 h-5 bg-slate-800 rounded-full flex items-center justify-center text-[9px] text-slate-500">{i+1}</span> {p.inGameName}</span></div>) : <div className="text-center text-slate-500 py-8 italic border border-dashed border-white/10 rounded-lg">Lobby Empty</div>}</div>}
-                        {activeTab === 'prizes' && <div className="bg-gradient-to-br from-yellow-900/20 to-slate-900 p-5 rounded-xl border border-yellow-500/20 text-center relative overflow-hidden"><div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div><Trophy size={32} className="mx-auto text-yellow-400 mb-3 drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]"/><div className="text-2xl font-black text-white font-tech tracking-wider">₹{t.prizePool}</div><div className="text-yellow-500/80 text-[10px] uppercase tracking-widest mt-1 font-bold">Winner Takes All</div></div>}
-                        {activeTab === 'rules' && <div className="text-slate-400 whitespace-pre-wrap leading-relaxed bg-slate-950/30 p-3 rounded-lg border border-white/5 text-[11px]">{t.rules || <DefaultRules/>}</div>}
-                        </div>
+                        {activeTab === 'players' && <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1 animate-fade-in">{t.participants?.length ? t.participants.map((p,i)=><div key={i} className="flex justify-between items-center bg-slate-950/40 border border-white/5 p-2.5 rounded-lg hover:bg-slate-800/50 transition-colors"><span className="font-bold text-slate-200 text-xs flex items-center gap-2"><span className="w-5 h-5 bg-slate-800 rounded-full flex items-center justify-center text-[9px] text-slate-500">{i+1}</span> {p.inGameName}</span></div>) : <div className="text-center text-slate-500 py-8 italic border border-dashed border-white/10 rounded-lg">Lobby Empty</div>}</div>}
+                        {activeTab === 'prizes' && <div className="bg-gradient-to-br from-yellow-900/20 to-slate-900 p-5 rounded-xl border border-yellow-500/20 text-center relative overflow-hidden animate-fade-in"><div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div><Trophy size={32} className="mx-auto text-yellow-400 mb-3 drop-shadow-md"/><div className="text-2xl font-black text-white font-tech tracking-wider">₹{t.prizePool}</div><div className="text-yellow-500/80 text-[10px] uppercase tracking-widest mt-1 font-bold">Winner Takes All</div></div>}
+                        {activeTab === 'rules' && <div className="text-slate-400 whitespace-pre-wrap leading-relaxed bg-slate-950/30 p-3 rounded-lg border border-white/5 text-[11px] animate-fade-in">{t.rules || <DefaultRules/>}</div>}
                         
                         <div className="mt-auto pt-4 border-t border-white/10 flex justify-between items-center relative z-20">
                             <div className="flex flex-col"><span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Entry Fee</span><span className="text-white font-black text-lg">{t.entryFee === 0 ? <span className="text-emerald-400">FREE</span> : `₹${t.entryFee}`}</span></div>
                             {isPast ? 
                                 (didWin ? 
-                                    <div className="flex-1 text-right"><div className="text-[10px] text-yellow-500 font-bold uppercase mb-1 tracking-wider">Victory</div><div className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-slate-900 px-4 py-1.5 rounded-full font-black text-xs inline-flex items-center gap-2 shadow-[0_0_15px_rgba(234,179,8,0.4)]"><Trophy size={12}/> +₹{t.prizePool}</div></div> 
+                                    <div className="flex-1 text-right"><div className="text-[10px] text-yellow-500 font-bold uppercase mb-1 tracking-wider">Victory</div><div className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-slate-900 px-4 py-1.5 rounded-full font-black text-xs inline-flex items-center gap-2 shadow-lg"><Trophy size={12}/> +₹{t.prizePool}</div></div> 
                                     : 
                                     <div className="text-right"><div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Champion</div><div className="text-yellow-400 font-bold flex items-center gap-1 neon-text-gold"><Trophy size={14}/> {t.winner || 'TBA'}</div></div>) 
                              : 
-                             joined ? <button disabled className="bg-emerald-900/20 border border-emerald-500/30 text-emerald-400 px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-2"><CheckCircle size={14}/> Joined</button> : 
-                             !t.registrationOpen ? <button disabled className="bg-slate-800 text-slate-500 px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider cursor-not-allowed">Paused</button> :
-                             isFull ? <button disabled className="bg-red-900/20 border border-red-500/30 text-red-400 px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider cursor-not-allowed">Full</button> :
-                             <button onClick={()=>setSelected(t)} className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white px-8 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 active:scale-95 transition-all duration-300">Join</button>}
+                             joined ? <button disabled className="bg-emerald-900/20 border border-emerald-500/30 text-emerald-400 px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-2"><CheckCircle size={14}/> Joined</button> : 
+                             !t.registrationOpen ? <button disabled className="bg-slate-800 text-slate-500 px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider cursor-not-allowed">Paused</button> :
+                             isFull ? <button disabled className="bg-red-900/20 border border-red-500/30 text-red-400 px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider cursor-not-allowed">Full</button> :
+                             <button onClick={()=>setSelected(t)} className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white px-8 py-3 rounded-lg font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all duration-300">Join</button>}
                         </div>
                     </div>
                 </div>
@@ -649,7 +660,7 @@
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px] -z-10"></div>
                   <div className="inline-block mb-6 relative group cursor-default">
                       <div className="absolute inset-0 bg-cyan-500 blur-[40px] opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                      <Flame size={80} className="text-cyan-500 relative z-10 filter drop-shadow-[0_0_15px_rgba(6,182,212,0.8)] animate-pulse"/>
+                      <Flame size={80} className="text-cyan-500 relative z-10 filter drop-shadow-lg animate-pulse-soft"/>
                   </div>
                   <h2 className="text-7xl md:text-9xl font-black text-white mb-4 tracking-tighter font-tech glitch-text leading-none" data-text="THE FUTURE">THE FUTURE</h2>
                   <div className="h-1 w-24 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mb-4"></div>
@@ -658,63 +669,48 @@
 
               <div className="grid md:grid-cols-2 gap-10 w-full max-w-5xl px-4">
                   {/* Player Card */}
-                  <button onClick={onGuestLogin} className="group relative h-96 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_60px_-10px_rgba(6,182,212,0.3)] border border-white/10 bg-slate-900/80 backdrop-blur-xl">
-                      {/* Animated Gradient Border */}
-                      <div className="absolute inset-0 p-[2px] rounded-[2.5rem] bg-gradient-to-br from-cyan-500 via-blue-600 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-shift" style={{mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', maskComposite: 'exclude'}}></div>
+                  <button onClick={onGuestLogin} className="group relative h-80 md:h-96 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_60px_-10px_rgba(6,182,212,0.3)] border border-white/10 bg-slate-900/80 active:scale-95">
+                      {/* Animated Gradient Border (Desktop) */}
+                      <div className="absolute inset-0 p-[2px] rounded-[2.5rem] bg-gradient-to-br from-cyan-500 via-blue-600 to-transparent opacity-30 group-hover:opacity-80 transition-opacity duration-500 md:animate-gradient-shift" style={{mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', maskComposite: 'exclude'}}></div>
                       
-                      {/* Inner Backgrounds */}
-                      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
                       <div className="absolute inset-0 bg-gradient-to-b from-cyan-900/10 via-slate-900/50 to-slate-950 opacity-80"></div>
-                      
-                      {/* Floating Elements */}
-                      <div className="absolute -right-12 -top-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] group-hover:bg-cyan-400/20 transition-colors duration-500"></div>
-                      
-                      {/* Scanner Effect */}
-                      <div className="absolute inset-0 w-full h-[2px] bg-cyan-400/50 blur-sm -translate-y-full group-hover:translate-y-[400px] transition-transform duration-[1.5s] ease-in-out delay-100"></div>
+                      <div className="absolute -right-12 -top-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px]"></div>
 
-                      <div className="relative z-10 h-full flex flex-col justify-end p-10 text-left">
-                          <div className="absolute top-8 right-8 p-5 bg-slate-950/80 rounded-2xl border border-white/10 group-hover:border-cyan-500/60 group-hover:scale-110 transition-all duration-500 shadow-[0_0_30px_-5px_rgba(6,182,212,0.2)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]">
-                              <Gamepad2 size={48} className="text-slate-400 group-hover:text-cyan-400 transition-colors duration-300"/>
+                      <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10 text-left">
+                          <div className="absolute top-8 right-8 p-4 md:p-5 bg-slate-950/80 rounded-2xl border border-white/10 group-hover:border-cyan-500/60 transition-all duration-500 shadow-lg">
+                              <Gamepad2 size={40} className="text-slate-400 group-hover:text-cyan-400 transition-colors duration-300"/>
                           </div>
                           
-                          <div className="space-y-3 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                          <div className="space-y-3 transform translate-y-0 transition-transform duration-500">
                               <div className="flex items-center gap-3 mb-2">
                                   <div className="h-[2px] w-8 bg-cyan-500 group-hover:w-16 transition-all duration-500"></div>
                                   <span className="text-cyan-500 text-xs font-bold uppercase tracking-widest">Access Granted</span>
                               </div>
-                              <h3 className="text-5xl font-black text-white font-tech italic leading-none group-hover:text-cyan-50 transition-colors drop-shadow-lg">PLAYER<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">ZONE</span></h3>
-                              <p className="text-slate-400 font-medium text-sm leading-relaxed group-hover:text-slate-300 transition-colors max-w-[80%]">Join the battlefield. Verify your skills. Claim victory.</p>
+                              <h3 className="text-4xl md:text-5xl font-black text-white font-tech italic leading-none group-hover:text-cyan-50 transition-colors drop-shadow-lg">PLAYER<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">ZONE</span></h3>
+                              <p className="text-slate-400 font-medium text-sm leading-relaxed group-hover:text-slate-300 transition-colors max-w-[90%]">Join the battlefield. Verify your skills. Claim victory.</p>
                           </div>
                       </div>
                   </button>
 
                   {/* Organizer Card */}
-                  <button onClick={()=>setShowAdmin(true)} className="group relative h-96 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_60px_-10px_rgba(139,92,246,0.3)] border border-white/10 bg-slate-900/80 backdrop-blur-xl">
-                      {/* Animated Gradient Border */}
-                      <div className="absolute inset-0 p-[2px] rounded-[2.5rem] bg-gradient-to-br from-violet-600 via-fuchsia-600 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-shift" style={{mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', maskComposite: 'exclude'}}></div>
+                  <button onClick={()=>setShowAdmin(true)} className="group relative h-80 md:h-96 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_60px_-10px_rgba(139,92,246,0.3)] border border-white/10 bg-slate-900/80 active:scale-95">
+                      <div className="absolute inset-0 p-[2px] rounded-[2.5rem] bg-gradient-to-br from-violet-600 via-fuchsia-600 to-transparent opacity-30 group-hover:opacity-80 transition-opacity duration-500 md:animate-gradient-shift" style={{mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', maskComposite: 'exclude'}}></div>
 
-                      {/* Inner Backgrounds */}
-                      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
                       <div className="absolute inset-0 bg-gradient-to-b from-violet-900/10 via-slate-900/50 to-slate-950 opacity-80"></div>
+                      <div className="absolute -left-12 -top-12 w-64 h-64 bg-violet-500/10 rounded-full blur-[80px]"></div>
 
-                      {/* Floating Elements */}
-                      <div className="absolute -left-12 -top-12 w-64 h-64 bg-violet-500/10 rounded-full blur-[80px] group-hover:bg-violet-400/20 transition-colors duration-500"></div>
-
-                      {/* Scanner Effect */}
-                      <div className="absolute inset-0 w-full h-[2px] bg-violet-400/50 blur-sm -translate-y-full group-hover:translate-y-[400px] transition-transform duration-[1.5s] ease-in-out delay-100"></div>
-
-                      <div className="relative z-10 h-full flex flex-col justify-end p-10 text-left">
-                          <div className="absolute top-8 right-8 p-5 bg-slate-950/80 rounded-2xl border border-white/10 group-hover:border-violet-500/60 group-hover:scale-110 transition-all duration-500 shadow-[0_0_30px_-5px_rgba(139,92,246,0.2)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]">
-                              <Shield size={48} className="text-slate-400 group-hover:text-violet-400 transition-colors duration-300"/>
+                      <div className="relative z-10 h-full flex flex-col justify-end p-8 md:p-10 text-left">
+                          <div className="absolute top-8 right-8 p-4 md:p-5 bg-slate-950/80 rounded-2xl border border-white/10 group-hover:border-violet-500/60 transition-all duration-500 shadow-lg">
+                              <Shield size={40} className="text-slate-400 group-hover:text-violet-400 transition-colors duration-300"/>
                           </div>
                           
-                          <div className="space-y-3 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                          <div className="space-y-3 transform translate-y-0 transition-transform duration-500">
                               <div className="flex items-center gap-3 mb-2">
                                   <div className="h-[2px] w-8 bg-violet-500 group-hover:w-16 transition-all duration-500"></div>
                                   <span className="text-violet-500 text-xs font-bold uppercase tracking-widest">Restricted Area</span>
                               </div>
-                              <h3 className="text-5xl font-black text-white font-tech italic leading-none group-hover:text-violet-50 transition-colors drop-shadow-lg">ADMIN<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">CONSOLE</span></h3>
-                              <p className="text-slate-400 font-medium text-sm leading-relaxed group-hover:text-slate-300 transition-colors max-w-[80%]">Control the arena. Manage brackets. Crown champions.</p>
+                              <h3 className="text-4xl md:text-5xl font-black text-white font-tech italic leading-none group-hover:text-violet-50 transition-colors drop-shadow-lg">ADMIN<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">CONSOLE</span></h3>
+                              <p className="text-slate-400 font-medium text-sm leading-relaxed group-hover:text-slate-300 transition-colors max-w-[90%]">Control the arena. Manage brackets. Crown champions.</p>
                           </div>
                       </div>
                   </button>
@@ -735,16 +731,16 @@
                         <h2 className="text-2xl font-black text-white font-tech tracking-wide flex items-center gap-2"><Shield className="text-cyan-500"/> DASHBOARD</h2>
                         <div className="flex gap-2">
                             {view === 'list' && (
-                                <>
-                                <button onClick={()=>setShowBroadcast(true)} className="bg-indigo-600 text-white px-4 py-2 rounded font-bold text-xs hover:scale-105 transition-transform">Broadcast</button>
-                                <button onClick={()=>setShowNews(true)} className="bg-slate-800 text-white px-4 py-2 rounded font-bold text-xs hover:scale-105 transition-transform border border-slate-600">News</button>
-                                </>
+                                <React.Fragment>
+                                <button onClick={()=>setShowBroadcast(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-transform shadow-lg">Broadcast</button>
+                                <button onClick={()=>setShowNews(true)} className="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-transform border border-slate-600">News</button>
+                                </React.Fragment>
                             )}
-                            <button onClick={()=>setView(view==='list'?'create':'list')} className="bg-cyan-600 text-white px-4 py-2 rounded font-bold text-xs hover:scale-105 transition-transform">{view==='list' ? '+ Create' : 'Back'}</button>
+                            <button onClick={()=>setView(view==='list'?'create':'list')} className="bg-cyan-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-transform shadow-lg">{view==='list' ? '+ Create' : 'Back'}</button>
                         </div>
                     </div>
                     {view === 'create' ? <CreateTournamentForm onComplete={()=>{setView('list'); showNotification("Created!");}} userId={userId} showNotification={showNotification}/> : 
-                     <div className="grid gap-4 animate-fade-in-up">{tournaments.map(t => <AdminTournamentCard key={t.id} data={t} showNotification={showNotification}/>)}</div>}
+                     <div className="grid gap-4 animate-fade-in-up pb-20">{tournaments.map(t => <AdminTournamentCard key={t.id} data={t} showNotification={showNotification}/>)}</div>}
                 </div>
             );
         }
@@ -787,7 +783,7 @@
                     
                     {tab === 'career' && (
                         <div className="mb-8 animate-fade-in">
-                            <div className="bg-gradient-to-r from-emerald-900/40 to-slate-900 p-6 rounded-2xl border border-emerald-500/30 flex items-center justify-between shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                            <div className="bg-gradient-to-r from-emerald-900/40 to-slate-900 p-6 rounded-2xl border border-emerald-500/30 flex items-center justify-between shadow-lg">
                                 <div>
                                     <div className="text-emerald-400 font-bold text-sm uppercase tracking-wider mb-1">Total Earnings</div>
                                     <div className="text-4xl font-black text-white font-tech">₹{totalWinnings}</div>
@@ -802,11 +798,11 @@
 
                     {tab !== 'career' && (
                         <div className="flex gap-2 overflow-x-auto pb-4 mb-2 custom-scrollbar">
-                            {['All','Free Fire','BGMI','COD Mobile'].map(g => <button key={g} onClick={()=>setGameFilter(g)} className={`px-4 py-1 rounded-full border text-xs font-bold whitespace-nowrap ${gameFilter===g?'bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]':'bg-slate-900 border-slate-800 text-slate-500'}`}>{g}</button>)}
+                            {['All','Free Fire','BGMI','COD Mobile'].map(g => <button key={g} onClick={()=>setGameFilter(g)} className={`px-4 py-1 rounded-full border text-xs font-bold whitespace-nowrap ${gameFilter===g?'bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-md':'bg-slate-900 border-slate-800 text-slate-500'}`}>{g}</button>)}
                         </div>
                     )}
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up pb-20">
                         {filtered.length === 0 ? <div className="col-span-full text-center py-20 text-slate-500 italic border border-dashed border-slate-800 rounded-xl">No tournaments found.</div> : 
                          filtered.map(t => {
                              const joined = t.participants?.find(p => p.userId === userId);
