@@ -397,7 +397,7 @@
                   const dateTime = new Date(`${editForm.date}T${editForm.time}`);
                   if (isNaN(dateTime.getTime())) throw new Error("Invalid Date/Time");
                   const docRef = getTournamentDoc(data.id);
-                  await updateDoc(docRef, { title: editForm.title, game: editForm.game, map: editForm.map, entryFee: Number(editForm.entryFee), prizePool: Number(editForm.prizePool), totalSlots: Number(editForm.totalSlots), rules: editForm.rules, announcement: editForm.announcement, dateTime: dateTime.toISOString() });
+                  await updateDoc(docRef, { title: editForm.title, game: editForm.title, map: editForm.map, entryFee: Number(editForm.entryFee), prizePool: Number(editForm.prizePool), totalSlots: Number(editForm.totalSlots), rules: editForm.rules, announcement: editForm.announcement, dateTime: dateTime.toISOString() });
                   setIsEditingDetails(false); showNotification("Tournament Updated Successfully");
               } catch(e) { console.error(e); alert(e.message); }
           };
@@ -674,6 +674,60 @@
             );
         }
 
+        // --- NEW FAQ COMPONENT ---
+        const FAQSection = () => {
+            const faqs = [
+                { q: "What is Ring's of Fire?", a: "Ring's of Fire is a premier competitive esports platform. We host daily high-stakes lobbies for games like Free Fire and BGMI, offering a secure arena for players to compete and earn real cash rewards." },
+                { q: "Is it safe to use?", a: "Operational security is paramount. We utilize advanced encryption for data protection and enforce strict fair-play algorithms to ensure a secure and equitable battleground for all operatives." },
+                { q: "Is my money safe?", a: "Affirmative. Your funds are secured in a protected vault. Winnings are processed and dispatched to your designated account within 24 hours of mission success verification." },
+                { q: "How to request a refund?", a: "For transaction disputes or refund requests, establish a direct line with our command team via Telegram. Message an Admin for immediate resolution protocols." }
+            ];
+
+            return (
+                <div className="mt-16 animate-fade-in border-t border-slate-800 pt-12">
+                    <h3 className="text-2xl font-black text-white mb-8 font-display text-center tracking-wider"><span className="text-cyan-500">SYSTEM</span> INTEL</h3>
+                    <div className="grid md:grid-cols-2 gap-4 mb-12">
+                        {faqs.map((f, i) => (
+                            <div key={i} className="glass-card p-6 rounded-xl border border-slate-700/50 hover:border-cyan-500/30 transition-all group">
+                                <div className="flex items-start gap-4">
+                                    <div className="bg-cyan-500/10 p-2.5 rounded-lg text-cyan-400 shrink-0 group-hover:scale-110 transition-transform"><Info size={20}/></div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-sm mb-2 font-display uppercase tracking-wide group-hover:text-cyan-400 transition-colors">{f.q}</h4>
+                                        <p className="text-slate-400 text-xs leading-relaxed font-mono">{f.a}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="border-t border-slate-800 pt-10 pb-6 text-center bg-gradient-to-t from-slate-900/50 to-transparent rounded-b-3xl">
+                        <h4 className="text-white font-bold mb-6 font-display text-sm tracking-widest">ESTABLISH COMMS</h4>
+                        <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-10 px-4">
+                            <a href="https://www.instagram.com/rings.of.fire.offical?igsh=MXBtY3hjbGFob3BicQ==" target="_blank" className="group relative">
+                                <div className="absolute inset-0 bg-pink-600 blur-xl opacity-20 group-hover:opacity-40 transition-opacity rounded-2xl"></div>
+                                <div className="relative bg-slate-950 border border-slate-700 p-4 md:p-6 rounded-2xl group-hover:border-pink-500/50 transition-all flex flex-col items-center gap-2 min-w-[120px] md:min-w-[140px] transform group-hover:-translate-y-1">
+                                    <Instagram size={28} className="text-pink-500 mb-1"/>
+                                    <span className="text-[10px] md:text-xs font-bold text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors">Instagram</span>
+                                </div>
+                            </a>
+                            <a href="https://t.me/ringsoffire1" target="_blank" className="group relative">
+                                <div className="absolute inset-0 bg-blue-600 blur-xl opacity-20 group-hover:opacity-40 transition-opacity rounded-2xl"></div>
+                                <div className="relative bg-slate-950 border border-slate-700 p-4 md:p-6 rounded-2xl group-hover:border-blue-500/50 transition-all flex flex-col items-center gap-2 min-w-[120px] md:min-w-[140px] transform group-hover:-translate-y-1">
+                                    <Send size={28} className="text-blue-500 mb-1"/>
+                                    <span className="text-[10px] md:text-xs font-bold text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors">Telegram</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div className="text-slate-600 text-[10px] font-mono uppercase tracking-widest flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+                            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-cyan-900 to-transparent mb-2"></div>
+                            <span>&copy; 2025 Ring's of Fire Pvt Ltd.</span>
+                            <span>All Rights Reserved. System Version 2.0</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         function RoleSelection({ onSelect, authError, onGuestLogin, setShowAdminLogin }) {
             return (
                 <div className="flex flex-col items-center justify-center min-h-[70vh] relative animate-fade-in">
@@ -695,6 +749,11 @@
                             <Shield size={80} className="absolute top-4 right-4 text-violet-500/10 group-hover:text-violet-500/20 transition-colors -rotate-6 group-hover:scale-110 duration-500 pointer-events-none"/>
                             <div className="relative h-full flex flex-col justify-end pointer-events-none"><div className="w-12 h-12 bg-violet-500/20 rounded-lg flex items-center justify-center mb-4 text-violet-400 border border-violet-500/30 group-hover:shadow-[0_0_15px_violet] transition-all"><Lock size={24}/></div><h3 className="text-2xl font-bold text-white font-display mb-1 group-hover:text-violet-400 transition-colors">ORGANIZER</h3><p className="text-slate-400 text-sm font-mono">Control the league. Manage chaos.</p></div>
                         </button>
+                    </div>
+                    
+                    {/* FAQ SECTION ADDED HERE FOR LANDING PAGE */}
+                    <div className="w-full max-w-4xl px-4 mt-8">
+                        <FAQSection />
                     </div>
                 </div>
             );
@@ -812,6 +871,8 @@
                                                 })}
                                             </div>
                                         )}
+                                        {/* --- NEW FAQ & FOOTER SECTION ADDED TO PLAYER ZONE --- */}
+                                        {view === 'home' && <div className="w-full max-w-4xl px-4 mt-8 mx-auto"><FAQSection /></div>}
                                     </>
                                 ) : (<AdminPanel tournaments={tournaments} showNotification={showNotification} userId={user?.uid} news={news} />)}
                             </>
