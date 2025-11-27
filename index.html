@@ -158,7 +158,7 @@
                 <div className={`glass-panel p-1 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.15)] w-full ${maxWidth} relative border border-cyan-500/30 overflow-hidden group`}>
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div className="bg-slate-950/90 p-6 md:p-8 rounded-xl h-full relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"><X size={20}/></button>
+                        {onClose && <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"><X size={20}/></button>}
                         {title && <h3 className="text-xl font-display font-bold text-white mb-6 text-center uppercase tracking-wider glitch-text" data-text={title}>{title}</h3>}
                         {children}
                     </div>
@@ -198,7 +198,7 @@
             );
         }
 
-        function PaymentModal({ tournament, onClose, userId, showNotification, onLoginRequest }) {
+        function PaymentModal({ tournament, onClose, user, showNotification, onLoginRequest }) {
           const [step, setStep] = useState(1);
           const [loading, setLoading] = useState(false);
           const req = tournament.format === 'Squad' ? 4 : tournament.format === 'Duo' ? 2 : 1;
@@ -219,7 +219,8 @@
           const handleJoinSubmit = async (e, isFree = false) => {
               e.preventDefault(); setLoading(true); 
               
-              const isDuplicate = tournament.participants?.some(p => p.userId === userId);
+              // Check if user already joined
+              const isDuplicate = tournament.participants?.some(p => p.userId === user.uid);
               if (isDuplicate) {
                   showNotification("You have already joined this tournament!", "warning");
                   onClose();
@@ -232,7 +233,7 @@
                 if (docRef) { 
                     await updateDoc(docRef, { 
                         filledSlots: increment(req), 
-                        participants: arrayUnion({ userId, name: form.name, inGameName: form.ign, teammates: form.team, paymentId: isFree ? 'FREE-ENTRY' : form.txn, paymentVerified: isFree ? true : false, joinedAt: new Date().toISOString(), upiId: form.upiId, upiName: form.upiName }) 
+                        participants: arrayUnion({ userId: user.uid, name: form.name, inGameName: form.ign, teammates: form.team, paymentId: isFree ? 'FREE-ENTRY' : form.txn, paymentVerified: isFree ? true : false, joinedAt: new Date().toISOString(), upiId: form.upiId, upiName: form.upiName }) 
                     }); 
                 }
                 if (isFree) { showNotification("Successfully Joined Tournament!"); onClose(); } 
@@ -240,10 +241,13 @@
               } catch(e) { console.error(e); alert("Error submitting. Please try again."); } finally { setLoading(false); }
           };
           
-          if (!userId) {
+          // Robust check for non-anonymous user
+          const isAuthenticated = user && !user.isAnonymous;
+
+          if (!isAuthenticated) {
               return (
                 <ModalWrapper title="JOIN THE ACTION" onClose={onClose}>
-                    <div className="text-center p-4">
+                    <div className="text-center p-4 animate-fade-in">
                         <div className="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/50"><User size={32} className="text-cyan-400"/></div>
                         <p className="text-slate-400 text-sm mb-6 font-mono">You need an operative account to register for <strong className="text-white">{tournament.title}</strong>.</p>
                         <button onClick={onLoginRequest} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_cyan] mb-3 font-display tracking-wide">LOGIN / CREATE ACCOUNT</button>
@@ -683,19 +687,18 @@
 
             const showNotification = (message, type = 'success') => { setNotification({ message, type }); setTimeout(() => setNotification(null), 3000); };
 
-            // Robust Auth Initialization (New Fix)
             useEffect(() => {
                 if(!app) return;
                 const initAuth = async () => {
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
                             await signInWithCustomToken(auth, __initial_auth_token);
-                        } else if (!auth.currentUser) {
-                            // Attempt anonymous sign-in if enabled in project, otherwise catch error silently
-                            await signInAnonymously(auth).catch(e => console.warn("Anon auth skipped/failed", e));
+                        } catch (e) {
+                            console.warn("Custom token failed, trying anonymous:", e);
+                            if (!auth.currentUser) await signInAnonymously(auth).catch(e => console.error("Anon failed", e));
                         }
-                    } catch (e) {
-                        console.error("Auth Init Error", e);
+                    } else if (!auth.currentUser) {
+                        await signInAnonymously(auth).catch(e => console.warn("Anon skipped", e));
                     }
                 };
                 initAuth();
@@ -785,18 +788,20 @@
                             </>
                         )}
                     </main>
-                    {showAuthModal && <PlayerAuthModal onClose={()=>setShowAuthModal(false)} onLogin={()=>{setShowAuthModal(false);setRole('player')}} showNotification={showNotification} />}
-                    {showAdminLogin && <AdminLoginModal onClose={()=>setShowAdminLogin(false)} onLogin={()=>{setShowAdminLogin(false);setRole('admin')}} showNotification={showNotification} />}
                     
                     {selected && (
                         <PaymentModal 
                             tournament={selected} 
                             onClose={()=>setSelected(null)} 
-                            userId={user?.uid} 
+                            user={user} 
                             showNotification={showNotification} 
-                            onLoginRequest={()=>{ setSelected(null); setShowAuthModal(true); }} 
+                            onLoginRequest={()=>{ setShowAuthModal(true); }} 
                         />
                     )}
+
+                    {showAuthModal && <PlayerAuthModal onClose={()=>setShowAuthModal(false)} onLogin={()=>{setShowAuthModal(false);setRole('player')}} showNotification={showNotification} />}
+                    {showAdminLogin && <AdminLoginModal onClose={()=>setShowAdminLogin(false)} onLogin={()=>{setShowAdminLogin(false);setRole('admin')}} showNotification={showNotification} />}
+                    
                 </div>
             );
         }
