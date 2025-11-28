@@ -77,7 +77,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
         import { getFirestore, collection, addDoc, updateDoc, doc, setDoc, onSnapshot, serverTimestamp, arrayUnion, deleteDoc, increment, query, where } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
-        import { Trophy, Gamepad2, Users, Calendar, CheckCircle, Plus, Trash2, LogOut, Shield, User, X, Lock, Key, Edit3, Crosshair, Award, History, Zap, QrCode, AlertTriangle, Check, Flame, Timer, AlertOctagon, Info, Pause, PlayCircle, Wallet, Smartphone, ShieldCheck, Loader2, ChevronRight, Megaphone, Coins, Save, MinusCircle, Pencil, Instagram, Mail, LogIn, UserPlus, Bell, Send, Share2, ArrowLeft, Archive, CreditCard } from 'https://esm.sh/lucide-react@0.292.0';
+        import { Trophy, Gamepad2, Users, Calendar, CheckCircle, Plus, Trash2, LogOut, Shield, User, X, Lock, Key, Edit3, Crosshair, Award, History, Zap, QrCode, AlertTriangle, Check, Flame, Timer, AlertOctagon, Info, Pause, PlayCircle, Wallet, Smartphone, ShieldCheck, Loader2, ChevronRight, Megaphone, Coins, Save, MinusCircle, Pencil, Instagram, Mail, LogIn, UserPlus, Bell, Send, Share2, ArrowLeft, Archive, CreditCard, Copy } from 'https://esm.sh/lucide-react@0.292.0';
 
         const firebaseConfig = { apiKey: "AIzaSyA6h78d692c8B86bY9VdStoHxw-RXgKfBE", authDomain: "rings-of-fire-2.firebaseapp.com", projectId: "rings-of-fire-2", storageBucket: "rings-of-fire-2.firebasestorage.app", messagingSenderId: "53125558154", appId: "1:53125558154:web:4fa473df9d422ad48de273", measurementId: "G-JVJJB1SWHF" };
         let app, auth, db; try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } catch (e) { console.error(e); }
@@ -397,7 +397,7 @@
                   const dateTime = new Date(`${editForm.date}T${editForm.time}`);
                   if (isNaN(dateTime.getTime())) throw new Error("Invalid Date/Time");
                   const docRef = getTournamentDoc(data.id);
-                  await updateDoc(docRef, { title: editForm.title, game: editForm.title, map: editForm.map, entryFee: Number(editForm.entryFee), prizePool: Number(editForm.prizePool), totalSlots: Number(editForm.totalSlots), rules: editForm.rules, announcement: editForm.announcement, dateTime: dateTime.toISOString() });
+                  await updateDoc(docRef, { title: editForm.title, game: editForm.game, map: editForm.map, entryFee: Number(editForm.entryFee), prizePool: Number(editForm.prizePool), totalSlots: Number(editForm.totalSlots), rules: editForm.rules, announcement: editForm.announcement, dateTime: dateTime.toISOString() });
                   setIsEditingDetails(false); showNotification("Tournament Updated Successfully");
               } catch(e) { console.error(e); alert(e.message); }
           };
