@@ -531,6 +531,11 @@
             // Logic to determine button text
             const joinButtonText = t.format === 'Solo' ? 'DEPLOY OPERATIVE' : 'DEPLOY SQUAD';
 
+            // Logic to reveal Room ID/Pass
+            const matchTime = new Date(t.dateTime).getTime();
+            const timeUntilMatch = matchTime - now;
+            const isRevealTime = timeUntilMatch <= 600000; // 10 minutes
+
             return (
                 <div className={`glass-card rounded-xl overflow-hidden flex flex-col h-full group relative border-t border-white/10 ${t.status==='completed'?'opacity-60 grayscale':''}`}>
                     <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none group-hover:bg-cyan-400/30 transition-all"></div>
@@ -567,7 +572,26 @@
                                     <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-3"><div className="h-full bg-cyan-500 shadow-[0_0_5px_cyan]" style={{width:`${percentFilled}%`}}></div></div>
                                     
                                     {joined ? (
-                                        <div className={`w-full py-2 rounded border ${verified ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'} text-center font-bold text-xs font-mono`}>{verified ? 'STATUS: CONFIRMED' : 'STATUS: PENDING'}</div>
+                                        <div className={`w-full rounded border p-3 ${verified ? 'bg-slate-950/50 border-cyan-500/30' : 'bg-yellow-500/10 border-yellow-500/30'}`}>
+                                            {!verified ? (
+                                                 <div className="text-yellow-400 text-center font-bold text-xs font-mono animate-pulse">STATUS: VERIFICATION PENDING</div>
+                                            ) : (
+                                                <>
+                                                    <div className="text-emerald-400 text-center font-bold text-xs font-mono mb-2">STATUS: CONFIRMED</div>
+                                                    {!isRevealTime && t.status !== 'completed' ? (
+                                                         <div className="text-center border-t border-white/10 pt-2">
+                                                            <div className="text-slate-500 text-[10px] font-bold uppercase flex items-center justify-center gap-1"><Lock size={10}/> Room Intel Locked</div>
+                                                            <div className="text-slate-600 text-[9px] mt-1">Reveals 10m before match</div>
+                                                         </div>
+                                                    ) : (
+                                                         <div className="text-center border-t border-white/10 pt-2 space-y-1">
+                                                            <div className="flex justify-between text-[10px] font-bold text-cyan-400"><span>ROOM ID:</span> <span className="select-all text-white">{t.roomId || 'WAITING'}</span></div>
+                                                            <div className="flex justify-between text-[10px] font-bold text-cyan-400"><span>PASS:</span> <span className="select-all text-white">{t.roomPassword || 'WAITING'}</span></div>
+                                                         </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
                                     ) : isFull || t.status === 'completed' ? (
                                         <div className="w-full py-2 bg-slate-800 text-slate-500 text-center font-bold text-xs border border-white/5">SECTOR CLOSED</div>
                                     ) : !t.registrationOpen ? (
